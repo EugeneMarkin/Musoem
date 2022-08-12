@@ -1,6 +1,12 @@
 from measure import Measure
 from FoxDot import Pattern
 
+# A Section is a FoxDot-friendly class that represents a section of music for
+# a signle part and single voice.
+
+# Section contains FoxDot patterns that can be passed to a Player object:
+    # pitch, octave, duration, bpm
+
 class Section:
     def __init__(self, measures:[Measure]):
         self.pitch = Pattern([])

@@ -7,31 +7,20 @@ from music21.meter.base import TimeSignature as M21TS
 from music21.stream.iterator import StreamIterator
 from music21.tempo import MetronomeMark
 from music21.tempo import TempoIndication
+from music21.tie import Tie
 
 from FoxDot import rest
 from FoxDot import Pattern
 from FoxDot import PGroup
 
-class TimeSignature:
+# A class representing a single measure of music for
+# a single part and a single voice.
 
-    def __init__(self, num, dur):
-        self.values = (num, dur)
+# If a measure contains a note that is ties to a note in the next measure,
+# the note's duration will exceed the duration of the measure.
 
-    @classmethod
-    def newFromM21TS(cls, ts: M21TS):
-        num = int(ts.beatCount)
-        dur = int(4 * float(ts.beatDuration.quarterLength))
-        return TimeSignature(num, dur)
-
-    def asTuple(self):
-        return self.values
-
-    def numerator(self):
-        return self.values[0]
-
-    def denominator(self):
-        return self.values[1]
-
+# If a measure contains a note that is tied to a note in previous measure,
+# the note will be parsed as a rest.
 
 class Measure:
 
@@ -93,6 +82,9 @@ class Measure:
                 self.pitch.extend([PGroup(list(p_map))])
                 self.octave.extend([PGroup(list(o_map))])
                 self.duration.extend([dur])
+
+            elif type(element) == Tie:
+                print("found a tie of type ", element.type)
             elif isinstance(element, Unpitched):
                 print("unpitched")
 
