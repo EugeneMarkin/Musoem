@@ -21,6 +21,7 @@ class Section:
             self.octave.extend(mes.octave)
             self.duration.extend(mes.duration)
             self.bpm.extend([mes.bpm]*len(mes.pitch))
+            
     @property
     def description(self):
         res = "pitch: " + str(self.pitch) + ", "

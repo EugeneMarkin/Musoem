@@ -1,14 +1,14 @@
 from music21.stream import Score as M21Score
 from music21.stream import Measure as M21Measure
-from music21.meter.base import TimeSignature as M21TS
 from music21.stream.base import PartStaff
 from music21.instrument import Instrument
 from measure import Measure
-from measure import TimeSignature
+from time_signature import TimeSignature
 from FoxDot import Pattern
 from section import Section
 from music21.tempo import MetronomeMark
-
+from parsers import ScoreParser
+from part import Part
 
 # A class representing an entire score
 # Score consists of parts - single staff part in the MusicXML score
@@ -20,32 +20,12 @@ class Score:
     # Parse from music21 Score object
     def __init__(self, sc: M21Score):
         # lines notated on different staves are parsed as separate parts
-        parts = sc.parts
         self._parts = {}
-        self.bpm = 120
-        # current time signature (last notated)
-        self.current_time_sig = TimeSignature(4, 4)
-
-        # todo handle metronome marks properly
-        metro_marks = sc.metronomeMarkBoundaries()
-
-        print("parts in score:", len(parts))
-
-        for partStaff in parts:
-            instr = partStaff.getInstrument(returnDefault=False).instrumentName
-            clef = self._get_clef_from_partStaff(partStaff)
-            part_id = instr + "_" + clef
-            part = Part(instr, clef, partStaff, metro_marks, part_id)
+        score_parser = ScoreParser(sc)
+        for part_id in score_parser.parts:
+            part_staff_parser = score_parser.parts[part_id]
+            part = Part(part_staff_parser)
             self._parts[part_id] = part
-    #def _get_bpm_list_for_measure(index):
-
-    # Extracts the clef given a partStaff (music21) object
-    def _get_clef_from_partStaff(self, partStaff):
-        for obj in partStaff.elements:
-            if type(obj) == M21Measure:
-                clef = obj.clef.name
-                break
-        return clef
 
     @property
     def parts(self):
