@@ -146,38 +146,39 @@ class VoiceParser:
 
     def _parse_note(self, note):
         degree = self._get_scale_degree(note.pitch)
+        dur = note.quarterLength
         if degree is None:
             print("faulty element ", note)
         if note.tie is not None:
             if note.tie.type == 'start':
                 dur = self._get_note_duration(note)
-                self.duration.append(dur)
             else:
                 self.pitch.append('rest')
                 self.octave.append('rest')
-                self.duration.append(note.quarterLength)
+                self.duration.append(dur)
                 return
         oct = note.octave
         self.pitch.append(degree)
         self.octave.append(oct)
+        self.duration.append(dur)
 
 
     def _parse_chord(self, chord):
         note = chord.notes[0]
+        dur = chord.quarterLength
         if note.tie is not None:
             if note.tie.type == 'start':
                 dur = self._get_chord_duration(chord)
-                self.duration.append(dur)
             else:
                 self.pitch.append('rest')
                 self.octave.append('rest')
-                self.duration.append(chord.quarterLength)
+                self.duration.append(dur)
                 return
         p_map = map(lambda p: self._get_scale_degree(p), chord.pitches)
         o_map = map(lambda n: n.octave, chord.notes)
         self.pitch.append(list(p_map))
         self.octave.append(list(o_map))
-
+        self.duration.append(dur)
 
     def _parse_rest(self, rest):
         self.pitch.append('rest')

@@ -58,4 +58,4 @@ def test3():
             voice = part.voices[voice_id]
             for measure in voice.measures:
                 print(measure.description)
-test2()
+test3()

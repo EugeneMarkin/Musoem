@@ -20,7 +20,6 @@ class Part:
         self.clef = psp.clef
         self._voices = {}
         self.id = psp.id
-        self.metro_marks = psp.metro_marks
         for mp in psp.measures:
             self._createMeasure(mp)
 
