@@ -31,20 +31,21 @@ class Score:
     def parts(self):
         return self._parts
 
-    # Extract a section of the score that contains a range of measures for a single insturment and clef
-    # Note: only 1 voice can be contained in a section. Default voice will be used if argument is omitted
-    def section(self, from_measure: int, to_measure: int,  instrument, voice = -1, clef = "treble") -> Section:
-        partKey = [instrument + "_" + clef]
-        if not partKey in self._parts.keys():
-            print("Warning: no part for ", instrument, " and ", clef)
+        # Extract a section of the score that contains a range of measures for a single insturment and clef
+        # Note: only 1 voice can be contained in a section. Default voice will be used if argument is omitted
+    def section(self, from_measure:int, to_measure: int, instrument, voice = "-1") -> Section:
+        if not instrument in list(self._parts.keys()):
+            print("Warning: no part for ", instrument)
             return None
-        part = self._parts[partKey]
-        if not voice in part.voices:
-            print("Warning: no voice number found:", voice)
-            return None
-        voice_part = part.voices[voice]
-        # TODO: add empty measures for voices
-        return voice_part.section(from_measure, to_measure)
+        else:
+            part = self._parts[instrument]
+            if not voice in part.voices:
+                print("Warning: no voice number found:", voice)
+            else:
+                voice_part = part.voices[voice]
+        section = voice_part.section(from_measure, to_measure)
+        print(section.description)
+        return section
 
     # Returns a dictionary where keys are individual parts or part voices
     # and values are Section objects containing ALL measures of the score

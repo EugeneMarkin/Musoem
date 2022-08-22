@@ -42,7 +42,7 @@ class ScoreParser:
         for partStaff in score.parts:
             part_staff_parser = PartStaffParser(partStaff, prev_part)
             prev_part = part_staff_parser
-            part_id = part_staff_parser.instrument + "_" + part_staff_parser.clef
+            part_id = part_staff_parser.id
             self.parts[part_id] = part_staff_parser
 
 class PartStaffParser:
@@ -129,7 +129,7 @@ class VoiceParser:
             and not type(element) == Chord
             and not type(element) == Unpitched
             and not type(element) == MetronomeMark):
-                print("This is not implemented: ", type(element))
+            #    print("This is not implemented: ", type(element))
                 return
 
         if type(element) == Note:
