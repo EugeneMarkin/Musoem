@@ -4,7 +4,7 @@ from score import Score
 from music21.stream.base import Score as M21Score
 from music21 import converter
 # score file path
-fp = "~/Documents/tf_draft.musicxml"
+fp = "~/Documents/time_files_full.musicxml"
 # load the score into musc21
 m21_score = converter.parse(fp, format = "musicxml")
 # parse the score
@@ -13,16 +13,22 @@ score = Score(m21_score)
 print(score.parts.keys())
 #   Bass Synth Parts
 # get first pattern from the score: measures 1 to 7
-bass = score.section(1, 4, "E Bass")
-bass.add_instrument("esinefm")
-low = score.section(19, 22, "Synth Bass")
-low.add_instrument("esinefm")
-mid = score.section(13, 16, "E Mid")
-mid.add_instrument("esinefm")
-hi = score.section(19, 22, "E Hi");
-hi.add_instrument("esinefm")
 
+# sine sub
+sine_sub = score.parts["Sine Sub"]
+print(sine_sub)
+for v in sine_sub.voices:
+    voice = sine_sub.voices[v]
+    for m in voice.measures:
+        print(m, m.index, m.degree, m.dur, m.sus)
 
+170 181
+
+ssp2 = score.section(170, 181, "Sine Sub")
+
+ssp2.add_midi_out(3)
+
+ssp2.play()
 
 
 # START THE PIECE

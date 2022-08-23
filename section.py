@@ -4,6 +4,7 @@ from FoxDot import Player
 from FoxDot import FileSynthDef
 from FoxDot import Env
 from FoxDot import Scale
+from FoxDot import MidiOut
 
 # A Section is a FoxDot-friendly class that represents a section of music for
 # a signle part and single voice.
@@ -36,17 +37,22 @@ class Section(object):
         self.instrument.env = Env.mask()
         self.instrument.add()
 
+    def add_midi_out(self, channel):
+        self.instrument = MidiOut
+        self.midi_channel = channel
+
     def play(self):
         if self.instrument is None:
             print("Can't play. Add an instrument first")
             return
-        self.player >> self.instrument(degree = self.degree,
+        self.player >> self.instrument(channel = self.midi_channel,
+                                       degree = self.degree,
                                        oct = self.oct,
                                        dur = self.dur,
                                        sus = self.sus,
                                        bpm = self.bpm,
                                        scale = Scale.chromatic)
-
+        
     def stop(self):
         self.player.stop()
 

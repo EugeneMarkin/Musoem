@@ -3,6 +3,7 @@
 from music21.stream.base import Score as M21Score
 from music21.stream.base import Measure as M21Measure
 from music21.stream.base import Voice as M21Voice
+from music21.chord import Chord
 from music21 import converter
 from score import Score
 from parsers import ScoreParser
@@ -13,13 +14,10 @@ file_path = "~/Documents/Gymnopédie_No._1-3.musicxml"
 test_path = "~/Documents/scoredot_test.musicxml"
 tf_path = "~/Documents/tf_draft.musicxml"
 
-m21_score = parse_musicxml_file(tf_path)
 
 def parse_musicxml_file(path) -> M21Score:
     return converter.parse(path, format = "musicxml")
 
-for part in m21_score.parts:
-    print(part.id)
 
 def test():
     print(file_path)
@@ -78,11 +76,32 @@ def test4():
             for measure in voice.measures:
                 print(measure.description)
 
-#test4()
-print(type(sys.path))
-for path in sys.path:
-    print(path)
+def test_bug1():
+    m21_score = parse_musicxml_file("~/Documents/time_files_full.musicxml")
+    score_parser = ScoreParser(m21_score)
+    print(score_parser)
+    parts = score_parser.parts
+    part = parts["Sine Sub"]
+    for measure in part.measures:
+        print("-------------------", measure.id)
+        for voice in measure.voices.values():
+            print('pitch', voice.pitch)
+            print('octave', voice.octave)
+            print('duration', voice.duration)
+            print('bpm', voice.bpm)
 
-sys.path.append("/Users/eugenemarkin/Projects/scoredot")
-
-test2()
+def test_bug2():
+    m21_score = parse_musicxml_file("~/Documents/time_files_full.musicxml")
+    part = m21_score.parts["Sine Sub"]
+    print(part)
+    for obj in part.iter:
+        print(obj)
+        if isinstance(obj, M21Measure):
+            for what in obj.iter:
+                print(what)
+                if isinstance(what, Chord):
+                    if what.tie is not None:
+                        print(what.tie.type)
+                        for note in what.notes:
+                            print(note, note.tie.type)
+test_bug1()

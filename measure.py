@@ -48,7 +48,7 @@ class Measure:
                     self.dur.extend([rest(dur[i])])
                     self.sus.extend([0])
             else:
-                if type(p) is list:
+                if type(p) is tuple:
                     self.degree.extend([PGroup(p)])
                     self.oct.extend([PGroup(octave[i])])
                 else:

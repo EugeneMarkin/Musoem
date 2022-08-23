@@ -51,6 +51,7 @@ class PartStaffParser:
         self.instrument = partStaff.getInstrument(returnDefault=False).instrumentName
         self.clef = self._get_clef_from_partStaff(partStaff)
         self.id = partStaff.id
+        print("------------------ parse part ----------------------------", self.id)
         self.measures = []
         measure_index = 0
         for obj in partStaff.iter:
@@ -93,6 +94,7 @@ class MeasureParser:
         self._parse_time_signature(measure, prev_ts)
         self.voices = {}
         self.bpm = prev_bpm.copy()
+        print("parse measure", self.id)
 
         if measure.hasVoices():
             for voice in measure.voices:
@@ -143,8 +145,8 @@ class VoiceParser:
         elif isinstance(element, MetronomeMark):
             self._parse_metro_mark(element)
 
-
     def _parse_note(self, note):
+        print("parse note", note,note.tie)
         degree = self._get_scale_degree(note.pitch)
         dur = note.quarterLength
         if degree is None:
@@ -164,21 +166,33 @@ class VoiceParser:
 
 
     def _parse_chord(self, chord):
-        note = chord.notes[0]
+        print("parse chord", chord)
         dur = chord.quarterLength
-        if note.tie is not None:
-            if note.tie.type == 'start':
-                dur = self._get_chord_duration(chord)
-            else:
-                self.pitch.append('rest')
-                self.octave.append('rest')
-                self.duration.append(dur)
-                return
-        p_map = map(lambda p: self._get_scale_degree(p), chord.pitches)
-        o_map = map(lambda n: n.octave, chord.notes)
-        self.pitch.append(list(p_map))
-        self.octave.append(list(o_map))
+        notes = list(chord.notes).copy()
+        for note in chord.notes:
+            note_dur = note.quarterLength
+            if note.tie is not None:
+                if note.tie.type == 'start':
+                    print("get note dur start tie", note)
+                    add_dur = self._get_note_duration(note)
+                    note_dur += add_dur
+                else:
+                    notes.remove(note)
+            if note_dur > dur:
+                dur = note_dur
+        if len(notes) > 1:
+            p_map = map(lambda n: self._get_scale_degree(n.pitch), notes)
+            o_map = map(lambda n: n.octave, notes)
+            self.pitch.append(tuple(p_map))
+            self.octave.append(tuple(o_map))
+        elif len(notes) == 1:
+            self.pitch.append(self._get_scale_degree(notes[0].pitch))
+            self.octave.append(notes[0].octave)
+        else:
+            self.pitch.append('rest')
+            self.octave.append('rest')
         self.duration.append(dur)
+
 
     def _parse_rest(self, rest):
         self.pitch.append('rest')
@@ -193,43 +207,44 @@ class VoiceParser:
     def _parse_metro_mark(self, mm):
         print("parse metro mark", mm)
         self.bpm.append(self._get_bpm_from_metronome_mark(mm))
+
     # if has a tie of type 'start' we need to find the end
     # of the tie and adjust the note's duration.
     # the resulting duration may exceed the duration of the measure,
     # but that is ok in our case
-    def _get_note_duration(self, note) -> float:
+    def _get_note_duration(self, note, cur) -> float:
         note_pitch = note.pitch
         note_octave = note.octave
         note_dur = note.quarterLength
         next = note.next()
+        print("next is", next)
         while next is not None:
+            print("next is", next)
             if (isinstance(next, Note)
              and next.pitch == note_pitch
              and next.octave == note_octave):
+                print("next is note")
                 if next.tie is not None:
                     if next.tie.type != 'start':
                         note_dur += next.quarterLength
                     if next.tie.type == 'stop':
-                        break
+                        return note_dur
+            elif isinstance(next, Chord):
+                print("next is chord")
+                for n in next.notes:
+                    if (n.pitch != note.pitch or note.octave != note.octave):
+                        print("continue")
+                        continue
+                    if n.tie is not None:
+                        if n.tie.type != 'start':
+                            note_dur += n.quarterLength
+                            print("append len", note_dur)
+                        if n.tie.type == 'stop':
+                            return note_dur
+
             next = next.next()
         return note_dur
 
-    def _get_chord_duration(self, chord) -> float:
-        chord_pitches = chord.pitches
-        chord_octaves = list(map(lambda n: n.octave, chord.notes))
-        chord_dur = chord.quarterLength
-        next = chord.next()
-        while next is not None:
-            if (isinstance(next, Chord) and
-                next.pitches == chord_pitches and
-                (list(map(lambda n: n.octave, chord.notes))) == chord_octaves):
-                    note = next.notes[0]
-                    if note.tie.type != 'start':
-                        chord_dur += note.quarterLength
-                    if note.tie.type == 'stop':
-                        break
-            next = next.next()
-        return chord_dur
 
     def _get_scale_degree(self, pitch):
         # always use C chromatic scale for now
