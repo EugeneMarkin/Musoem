@@ -102,6 +102,5 @@ def test_bug2():
                 if isinstance(what, Chord):
                     if what.tie is not None:
                         print(what.tie.type)
-                        for note in what.notes:
-                            print(note, note.tie.type)
+
 test_bug1()
