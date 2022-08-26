@@ -20,22 +20,21 @@ class Measure:
                  pitch,
                  octave,
                  duration,
+                 sustain,
                  bpm,
                  ts):
         self.index: int = index # the original place of the measure in score (for reference)
         self.ts = ts
         self.bpm = Pattern(bpm)
-        self._parse_lists_into_patterns(pitch, octave, duration, bpm)
+        self._parse_lists_into_patterns(pitch, octave, duration, sustain, bpm)
 
 
-    def _parse_lists_into_patterns(self, pitch, octave, dur, bpm):
+    def _parse_lists_into_patterns(self, pitch, octave, dur, sus, bpm):
         self.degree = Pattern([])
         self.oct = Pattern([])
         self.dur = Pattern([])
         self.sus = Pattern([])
-        offset = 0
-        # we must take care of the notes that ring longer than the duration of
-        # the measure.
+
         measure_dur = self.ts.numerator * (4 / self.ts.denominator)
         for i, p in enumerate(pitch):
             if (p == 'unpitched' or p == 'rest'):
@@ -43,7 +42,7 @@ class Measure:
                 self.oct.extend([5])
                 if p == 'unpitched':
                     self.dur.extend([dur[i]])
-                    self.sus.extend([dur])
+                    self.sus.extend([sus[i]])
                 elif p == 'rest':
                     self.dur.extend([rest(dur[i])])
                     self.sus.extend([0])
@@ -54,15 +53,8 @@ class Measure:
                 else:
                     self.degree.extend([p])
                     self.oct.extend([octave[i]])
-                # handle possibly tied notes, that will last longer than the
-                # duration of this measure, by adjusting their sustain
-                if (offset + dur[i]) > measure_dur:
-                    self.dur.extend([measure_dur - offset])
-                else:
-                    self.dur.extend([dur[i]])
-                self.sus.extend([dur[i]])
-
-            offset += dur[i]
+                self.dur.extend([dur[i]])
+                self.sus.extend([sus[i]])
 
 
     @property

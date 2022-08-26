@@ -48,7 +48,7 @@ class ScoreParser:
 class PartStaffParser:
 
     def __init__(self, partStaff: PartStaff, prev_part):
-        print("parse part", partStaff.id)
+        #print("parse part", partStaff.id)
         self.instrument = partStaff.getInstrument(returnDefault=False).instrumentName
         self.clef = self._get_clef_from_partStaff(partStaff)
         self.id = partStaff.id
@@ -94,7 +94,7 @@ class MeasureParser:
         self._parse_time_signature(measure, prev_ts)
         self.voices = {}
         self.bpm = prev_bpm.copy()
-        print("parse measure", self.id)
+        #print("parse measure", self.id)
 
         if measure.hasVoices():
             for voice in measure.voices:
@@ -120,6 +120,7 @@ class VoiceParser:
         self.pitch = []
         self.octave = []
         self.duration = []
+        self.sus = []
         self.bpm = prev_bpm.copy()
         self.part = part
         self.measure = measure
@@ -149,38 +150,43 @@ class VoiceParser:
 
     def _parse_note(self, note):
         degree = self._get_scale_degree(note.pitch)
+        sus = note.quarterLength
         dur = note.quarterLength
         if degree is None:
             print("faulty element ", note)
         if note.tie is not None:
             if note.tie.type == 'start':
-                dur = self._get_note_duration(note, None)
+                sus = self._get_note_sustain(note, None)
             else:
                 self.pitch.append('rest')
                 self.octave.append('rest')
                 self.duration.append(dur)
+                self.sus.append(sus)
                 return
         oct = note.octave
         self.pitch.append(degree)
         self.octave.append(oct)
         self.duration.append(dur)
+        self.sus.append(sus)
 
 
     def _parse_chord(self, chord):
         dur = chord.quarterLength
+        sus = chord.quarterLength
         notes = list(chord.notes).copy()
         for note in chord.notes:
-            note_dur = note.quarterLength
+            note_sus = note.quarterLength
             if note.tie is not None:
                 if note.tie.type == 'start':
-                    note_dur = self._get_note_duration(note, chord)
+                    note_sus = self._get_note_sustain(note, chord)
                 else:
                     notes.remove(note)
             # foxdot can not stop one note in the chord and let the other one ring
+            # i.e. it doesn't support PGroups for sustain
             # so we use the longest duration for all notes in the chord
             # (chord in music21 refers to chord, note cluster, harm. interval)
-            if note_dur > dur:
-                dur = note_dur
+            if note_sus > sus:
+                sus = note_sus
         if len(notes) > 1:
             p_map = map(lambda n: self._get_scale_degree(n.pitch), notes)
             o_map = map(lambda n: n.octave, notes)
@@ -193,20 +199,23 @@ class VoiceParser:
             self.pitch.append('rest')
             self.octave.append('rest')
         self.duration.append(dur)
+        self.sus.append(sus)
 
 
     def _parse_rest(self, rest):
         self.pitch.append('rest')
         self.octave.append('rest')
         self.duration.append(rest.quarterLength)
+        self.sus.append(rest.quarterLength)
 
     def _parse_unpitched(self, unpitched):
         self.pitch.append("unpitched")
         self.octave.append("unpitched")
         self.duration.append(unpitched.quarterLength)
+        self.sus.append(unpitched.quarterLength)
 
     def _parse_metro_mark(self, mm):
-        print("parse metro mark", mm)
+        #print("parse metro mark", mm)
         self.bpm.append(self._get_bpm_from_metronome_mark(mm))
 
 
@@ -214,22 +223,22 @@ class VoiceParser:
     # of the tie and adjust the note's duration.
     # the resulting duration may exceed the duration of the measure,
     # but that is ok in our case
-    def _get_note_duration(self, note, chord) -> float:
-        print("get note duration", note, "chord", chord)
+    def _get_note_sustain(self, note, chord) -> float:
+        #print("get note duration", note, "chord", chord)
         cur_note = note
         cur_chord = chord
         dur = note.quarterLength
         cur_measure_index = self.part.index(self.measure)
         while cur_note is not None:
-            print("cur note", cur_note, "cur mes", cur_measure_index)
+            #print("cur note", cur_note, "cur mes", cur_measure_index)
             cur_note, cur_chord, cur_measure_index = self._find_tied_note(cur_note, cur_chord, cur_measure_index)
-            print("next note", cur_note, "next mes", cur_measure_index)
+            #print("next note", cur_note, "next mes", cur_measure_index)
             if cur_note == None:
                 return dur
             if cur_note.tie is not None:
-                print("cur note's tie", cur_note.tie.type)
+                #print("cur note's tie", cur_note.tie.type)
                 if cur_note.tie.type != 'start':
-                    print("cur dur", dur, "adding", cur_note.quarterLength)
+                    #print("cur dur", dur, "adding", cur_note.quarterLength)
                     dur += cur_note.quarterLength
                 # continue looking forward until we find the tie stop
                 if cur_note.tie.type == 'stop':
@@ -243,7 +252,7 @@ class VoiceParser:
     # note can be part of the chord, so we need the chord object to find its position
     # in the measure
     def _find_tied_note(self, note, chord, mes_num, depth = 0):
-        print("find tied note", note, "that is in chord", chord, "in measure", mes_num)
+        #print("find tied note", note, "that is in chord", chord, "in measure", mes_num)
         if mes_num == len(self.part):
             return None, None, None
         cur_measure = self.part[mes_num]
@@ -251,29 +260,32 @@ class VoiceParser:
 
         if depth == 0:
             if note in cur_measure.elements:
-                print("note in measure", note, note in cur_measure.elements)
+                #print("note in measure", note, note in cur_measure.elements)
                 start_index = cur_measure.elements.index(note)+1
             elif (chord is not None and chord in cur_measure.elements):
-                print("chord in measure", chord, chord in cur_measure.elements)
+                #print("chord in measure", chord, chord in cur_measure.elements)
                 start_index = cur_measure.elements.index(chord)+1
         else:
-            print("note not in measure", note, cur_measure)
+            #print("note not in measure", note, cur_measure)
             start_index = 0
         for next in cur_measure.elements[start_index:len(cur_measure)]:
             matching_note, matching_chord = self._find_matching_note(next, note)
             if matching_note is not None:
-                print("found matching note", matching_note, "in measure", cur_measure)
+                #print("found matching note", matching_note, "in measure", cur_measure)
                 return matching_note, matching_chord, mes_num
         return self._find_tied_note(note, chord, mes_num + 1, depth + 1)
 
     # find note with the same pitch and octave in the chord or another note
     def _find_matching_note(self, obj, note):
+        #print("test if obj", obj, "matches note", note)
         if isinstance(obj, Note):
             if (obj.pitch == note.pitch and obj.octave == note.octave):
                 return obj, None
         elif isinstance(obj, Chord):
+            #print("obj is a chord", obj.notes)
             for n in obj.notes:
-                if (n.pitch == note.pitch and n.octave == note.octave):
+                #print("n pitch", n.pitch, "note pitch", note.pitch, "n octave", n.octave, "note octave", note.octave)
+                if (n.pitch.name == note.pitch.name and n.octave == note.octave):
                     return n, obj
         return None, None
 

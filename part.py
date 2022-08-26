@@ -30,16 +30,22 @@ class Part:
             pitch = vp.pitch
             octave = vp.octave
             duration = vp.duration
+            sustain = vp.sus
             bpm = mp.bpm
             ts = mp.ts
             id = mp.id
-            measure = Measure(id, pitch, octave, duration, bpm, ts)
+            measure = Measure(id, pitch, octave, duration, sustain, bpm, ts)
             if voice_key not in self._voices:
                 voice = Voice(voice_key, [measure])
                 self._voices[voice_key] = voice
             else:
                 self._voices[voice_key].append(measure)
 
+    @property
+    def measures(self) -> [Measure]:
+        if len(self._voices) > 1:
+            print("WARNING: part has multiple voices. Returning default voice")
+        return self._voices[list(self._voices.keys())[0]].measures
 
     @property
     def voices(self) -> [Voice]:

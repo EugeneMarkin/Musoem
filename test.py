@@ -7,6 +7,7 @@ from music21.chord import Chord
 from music21 import converter
 from score import Score
 from parsers import ScoreParser
+from parsers import PartStaffParser
 import sys
 
 
@@ -78,16 +79,15 @@ def test4():
 
 def test_bug1():
     m21_score = parse_musicxml_file("~/Documents/time_files_full.musicxml")
-    score_parser = ScoreParser(m21_score)
-    print(score_parser)
-    parts = score_parser.parts
-    part = parts["Sine Sub"]
+    #score_parser = ScoreParser(m21_score)
+    part = PartStaffParser(m21_score.parts["Sine Sub"], None)
     for measure in part.measures:
         print("-------------------", measure.id)
         for voice in measure.voices.values():
             print('pitch', voice.pitch)
             print('octave', voice.octave)
             print('duration', voice.duration)
+            print('sustain', voice.sus)
             print('bpm', voice.bpm)
 
 def test_bug2():
@@ -102,5 +102,12 @@ def test_bug2():
                 if isinstance(what, Chord):
                     if what.tie is not None:
                         print(what.tie.type)
+def test5():
+    m21_score = parse_musicxml_file("~/Documents/time_files_full.musicxml")
+    score = Score(m21_score)
+    part = score.parts["FB Mid"]
+    measures = part.measures
+    for m in measures:
+        print(m.description)
 
-test_bug1()
+test5()

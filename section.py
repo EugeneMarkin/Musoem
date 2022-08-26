@@ -5,6 +5,7 @@ from FoxDot import FileSynthDef
 from FoxDot import Env
 from FoxDot import Scale
 from FoxDot import MidiOut
+from FoxDot import Clock
 
 # A Section is a FoxDot-friendly class that represents a section of music for
 # a signle part and single voice.
@@ -13,7 +14,7 @@ from FoxDot import MidiOut
     # pitch, octave, duration, bpm
 
 class Section(object):
-    def __init__(self, measures:[Measure]):
+    def __init__(self, measures:[Measure], instrument_key = None):
         self.player = Player()
 
         self.degree = Pattern([])
@@ -31,6 +32,14 @@ class Section(object):
             self.sus.extend(mes.sus)
             self.bpm.extend(mes.bpm)
 
+        if instrument_key is not None:
+            if "midi" in instrument_key:
+                split_key = instrument_key.split(" ")
+                if (len(split_key) != 2):
+                    return
+                self.add_midi_out(int(split_key[1]) - 1) # -1 because FoxDot counts midi channels from 0
+            else:
+                self.add_instrument(instrument_key)
 
     def add_instrument(self, instr):
         self.instrument = FileSynthDef(instr)
@@ -41,7 +50,7 @@ class Section(object):
         self.instrument = MidiOut
         self.midi_channel = channel
 
-    def play(self):
+    def play(self, times = None):
         if self.instrument is None:
             print("Can't play. Add an instrument first")
             return
@@ -52,9 +61,15 @@ class Section(object):
                                        sus = self.sus,
                                        bpm = self.bpm,
                                        scale = Scale.chromatic)
-        
+        if times is not None:
+            Clock.future(times * sum(self.dur), self.stop)
+
     def stop(self):
         self.player.stop()
+
+
+    def once(self):
+        self.play(1)
 
     # bypass the attributes other than player and instrument to the player
     # so when live coding we can apply pattern operations to the section object itself

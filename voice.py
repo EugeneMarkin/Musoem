@@ -22,11 +22,11 @@ class Voice:
     def append(self, mes: Measure):
         self._measures.append(mes)
     # Get a Section object from this voice, containing a range of measures
-    def section(self, from_measure: int, to_measure: int) -> Section:
-        return Section(self._measures[from_measure-1:to_measure])
+    def section(self, from_measure: int, to_measure: int, instrument = None) -> Section:
+        return Section(self._measures[from_measure-1:to_measure], instrument)
     # Get a Section object containing ALL the measures in this voice
     @property
-    def all(self) -> Section:
+    def all(self, instrument = None) -> Section:
         return Section(self._measures)
 
     # Get the measures list of this voice

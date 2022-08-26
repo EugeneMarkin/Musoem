@@ -34,7 +34,7 @@ instr = MidiOut
 
 p4 >> instr(degree = P[7])
 
-p5 >> MidiOut(channel = 1, degree = P[1], dur = P[1, rest(4)], sus = 4)
+p5 >> MidiOut(channel = 1, degree = P(1, 2), dur = P[1, rest(2)], sus = 8)
 
 # write your own functions for manipulating the score
 
