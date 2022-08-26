@@ -25,6 +25,8 @@ class Section(object):
         self.ts = Pattern([])
         self.sus = Pattern([])
 
+        self._next= None
+
         for mes in measures:
             self.degree.extend(mes.degree)
             self.oct.extend(mes.oct)
@@ -63,13 +65,18 @@ class Section(object):
                                        scale = Scale.chromatic)
         if times is not None:
             Clock.future(times * sum(self.dur), self.stop)
+        return self
 
     def stop(self):
         self.player.stop()
-
+        if self._next is not None:
+            self._next[0](self._next[1])
 
     def once(self):
         self.play(1)
+
+    def next(section: Section, times = None):
+        self._next = (section, times)
 
     # bypass the attributes other than player and instrument to the player
     # so when live coding we can apply pattern operations to the section object itself
