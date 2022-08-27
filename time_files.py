@@ -15,28 +15,34 @@ instr_map = {"Sine Bass" : "midi 1", "Sine Mid" : "midi 2",
 score = Score(m21_score, instr_map)
 # this gives the parts in the score
 print(score.parts.keys())
+Clock.now_flag = True
 
+#
+# A: measures 1 to 71
 sb1 = score.section(1, 4, "Sine Bass") # loop
-sb109 = score.section(109, 119, "Sine Bass") # once
-sb121 = score.section(121, 124, "Sine Bass") # loop
 sm13 = score.section(13, 16, "Sine Mid") # loop
-sm109 = score.section(109, 112, "Sine Mid") # once
-sm114 = score.section(114, 116, "Sine Mid") # loop
-sm189 = score.section(189, 197, "Sine Mid") # 3 times
 ss19 = score.section(19, 22, "Sine Sub") # loop
-ss109 = score.section(109, 116, "Sine Sub") # once
-ss170 = score.section(170, 181, "Sine Sub") # 5 times
 sh19 = score.section(19, 22, "Sine Hi") # loop
+fbm77 = score.section(77, 83, "FB Mid") # once
+fbh69 = score.section(69, 76, "FB Hi") # 4 times
+# measures 109 to 170
+sb109 = score.section(109, 119, "Sine Bass") # once
+sm109 = score.section(109, 112, "Sine Mid") # once
+ss109 = score.section(109, 116, "Sine Sub") # once
 sh109 = score.section(109, 117, "Sine Hi") # play 4 times
+fbm109 = score.section(109, 149, "FB Mid") # once
+sm114 = score.section(114, 116, "Sine Mid") # loop
+sb121 = score.section(121, 124, "Sine Bass") # loop
 sh141 = score.section(141, 144, "Sine Hi") # 6 times
+# measures 170 to 206
+ss170 = score.section(170, 181, "Sine Sub") # 5 times
 sh170 = score.section(170, 173, "Sine Hi") # 4 times
+sm189 = score.section(189, 197, "Sine Mid") # 3 times
 sh190 = score.section(190, 193, "Sine Hi") # 4 times
+# measures
 sh206 = score.section(206, 209, "Sine Hi") # 2 times
 sh222 = score.section(222, 225, "Sine Hi") # 4 times
-fbm77 = score.section(77, 83, "FB Mid") # once
-fbm109 = score.section(109, 149, "FB Mid") # once
 fbm150 = score.section(150, 153, "FB Mid") # loop
-fbh69 = score.section(69, 76, "FB Hi") # 4 times
 fbh125 = score.section(125, 132, "FB Hi") # 3 times
 fbh167 = score.section(167, 173, "FB Hi") # once
 fbh174 = score.section(174, 184, "FB Hi") # 3 times
