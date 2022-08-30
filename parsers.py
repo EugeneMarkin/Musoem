@@ -209,8 +209,8 @@ class VoiceParser:
         self.sus.append(rest.quarterLength)
 
     def _parse_unpitched(self, unpitched):
-        self.pitch.append("unpitched")
-        self.octave.append("unpitched")
+        self.pitch.append(self._get_scale_degree(unpitched.displayStep))
+        self.octave.append(unpitched.displayOctave)
         self.duration.append(unpitched.quarterLength)
         self.sus.append(unpitched.quarterLength)
 

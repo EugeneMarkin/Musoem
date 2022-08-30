@@ -6,6 +6,7 @@ from FoxDot import Env
 from FoxDot import Scale
 from FoxDot import MidiOut
 from FoxDot import Clock
+from FoxDot import rest
 from section_player import SectionPlayer
 
 # A Section is a FoxDot-friendly class that represents a section of music for
@@ -25,6 +26,7 @@ class Section(object):
         # TODO: implement this
         self.ts = Pattern([])
         self.sus = Pattern([])
+        self.wait = 0
 
         self._next= None
         self._times = None
@@ -56,6 +58,11 @@ class Section(object):
         self.midi_channel = channel
 
     def play(self, times = None):
+        if self.wait != 0:
+            Clock.future(self._get_clock_beats(self.wait), self.play, args=[times])
+            self.wait = 0
+            return self
+
         if self._isplaying:
             print("Section already playing")
             return self
@@ -74,9 +81,27 @@ class Section(object):
                                        bpm = self.bpm,
                                        scale = Scale.chromatic)
         if times is not None:
-            Clock.future(times * sum(self.dur), self.stop)
+            delay_beats = self._get_clock_beats(times * self._total_dur)
+            Clock.future(delay_beats, self.stop)
 
         return self
+
+    @property
+    def _average_tempo(self):
+        return sum(self.bpm)/len(self.bpm)
+
+    def _get_clock_beats(self, beats):
+        return beats * Clock.bpm / self._average_tempo
+
+    @property
+    def _total_dur(self):
+        res = 0
+        for el in self.dur:
+            if (isinstance(el, float) or isinstance(el, int)):
+                res += el
+            elif isinstance(el, rest):
+                res += el.dur
+        return res
 
     def stop(self):
         self._isplaying = False
@@ -114,6 +139,11 @@ class Section(object):
     def __mul__(self, times):
         if isinstance(times, int):
             self._times = times
+        return self
+
+    def __mod__(self, delay):
+        if (isinstance(delay, float) or isinstance(delay, int)):
+            self.wait = delay
         return self
 
     def __invert__(self):
@@ -157,11 +187,11 @@ class SectionGroup(object):
             section(section._times)
 
         if times is not None:
-            dur = max(list(map(lambda x: sum(x.dur), self._sections)))
+            dur = max(list(map(lambda x: x._get_clock_beats(x._total_dur), self._sections)))
             Clock.future(times * dur, self.stop)
         else:
             all_times = list(map(lambda x: x._times, self._sections))
-            all_durs = list(map(lambda x: sum(x.dur), self._sections))
+            all_durs = list(map(lambda x: x._get_clock_beats(x._total_dur), self._sections))
             if None not in all_times:
                 durs = [t * d for t, d in zip(all_times, all_durs)]
                 Clock.future(max(durs), self.stop)
