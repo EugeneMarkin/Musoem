@@ -7,15 +7,17 @@ p1 >> MidiOut(channel = 10, oct = 3, scale = Scale.chromatic,
     delay = 0.5
 )
 
+p1.stop()
 
-p2 >> MidiOut(channel = 2, oct = 3, scale = Scale.chromatic,
-    degree = P[9].stutter(32),
+p2 >> MidiOut(channel = 10, oct = 3, scale = Scale.chromatic,
+    degree = P[4].stutter(32),
     dur = P[1/4].stutter(32),
     amp = P[0.7, 0.4, 0.4, 0.5].every(2, 'shuffle'),
     delay = P[0.125, 0.25, 0.5, 0.75],
-    bpm = linvar([30, 120], 16),
+    bpm = linvar([300, 10], 16),
 )
 
+p2.stop()
 
 p3 >> MidiOut(channel = 2, oct = 3, scale = Scale.chromatic,
     degree = P[7, 6, 4,3, 0],

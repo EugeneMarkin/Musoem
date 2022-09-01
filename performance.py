@@ -28,7 +28,8 @@ d()
 
 d.stop()
 
-percD._get_delay(percD._total_dur)
+print(percD._get_delay(percD._total_dur))
+print(percD._total_dur)
 
 vlD.
 

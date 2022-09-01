@@ -190,6 +190,7 @@ class SectionGroup(object):
             dur = max(list(map(lambda x: x._get_clock_beats(x._total_dur), self._sections)))
             Clock.future(times * dur, self.stop)
         else:
+            # TODO: simplify this by adding a function that returns total clock beats
             all_times = list(map(lambda x: x._times, self._sections))
             all_durs = list(map(lambda x: x._get_clock_beats(x._total_dur), self._sections))
             if None not in all_times:
