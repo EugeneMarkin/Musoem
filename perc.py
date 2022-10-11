@@ -3,18 +3,20 @@ p1 >> MidiOut(channel = 10, oct = 3, scale = Scale.chromatic,
     degree = P[4],
     dur = P[16/4].stutter(64),
     amp = P[0.8, 1, 0.5, 0.3, 0.5, 1, 0.5, 0.8].every(2, 'shuffle'),
-    bpm = 80, #linvar([2, 120], 16)
+    bpm = linvar([2, 120], 16),
     delay = 0.5
 )
+
+p1.bpm = linvar([20, 200], 16)
 
 p1.stop()
 
 p2 >> MidiOut(channel = 10, oct = 3, scale = Scale.chromatic,
     degree = P[4].stutter(32),
     dur = P[1/4].stutter(32),
-    amp = P[0.7, 0.4, 0.4, 0.5].every(2, 'shuffle'),
+    amp = P[0.7, 0.4, 0.4, 0.5].everyAccompany(2, 'shuffle'),
     delay = P[0.125, 0.25, 0.5, 0.75],
-    bpm = linvar([300, 10], 16),
+    bpm = linvar([20, 300], 16),
 )
 
 p2.stop()
