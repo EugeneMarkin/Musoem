@@ -1,3 +1,5 @@
+import random
+
 class Command:
     def __init__(self):
         self.reps = -1

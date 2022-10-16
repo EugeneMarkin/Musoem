@@ -17,7 +17,7 @@ from section_player import SectionPlayer
 
 class Section(object):
 
-    def __init__(self, measures:[Measure], instrument_key = None):
+    def __init__(self, measures:[Measure], instrument_key = None, keyword = None):
         self.player = SectionPlayer()
         self.degree = Pattern([])
         self.oct = Pattern([])
@@ -27,6 +27,8 @@ class Section(object):
         self.ts = Pattern([])
         self.sus = Pattern([])
         self.wait = 0
+        self.keyword = keyword
+        self.operations = {}
 
         self._next= None
         self._times = None
@@ -85,6 +87,27 @@ class Section(object):
             Clock.future(delay_beats, self.stop)
 
         return self
+
+    def apply(self, operation):
+        self.operations[operation.keyword] = operation
+        print("applying operation ", operation.keyword, "to section ", self.keyword)
+
+    def reset(self, operation_key = None):
+        # TODO: impolement the operation reset
+        if operation is not None:
+            print("resetting operation", operation_key)
+        else:
+            for operation in list(self.operations.values()):
+                print("resetting operation", operation.keyword)
+
+    def display(self):
+        res = self.keyword + " "
+        for operation in self.operations:
+            res += operation.keyword + " "
+
+        if self._next is not None:
+            res += self._next.display()
+        return res
 
     @property
     def _average_tempo(self):
@@ -169,6 +192,11 @@ class Section(object):
         res += "bpm: " + str(self.bpm)
         return res
 
+class SectionStub(Section):
+
+    def play(self, time = None):
+        print("playing section", self.keyword)
+
 class SectionGroup(object):
 
     def __init__(self, sections):
@@ -243,3 +271,28 @@ class SectionGroup(object):
 
     def __invert__(self):
         self.stop()
+
+
+# this is class for a
+# TODO: maybe rename this to Transformation or something
+
+# A class for music transformation
+class Operation:
+
+    def __init__(self, keyword):
+        self.keyword = keyword
+
+# A transformation that is applied to section of the score
+class SectionOperation(Operation):
+
+    def stub(self):
+        print("stub")
+# A transformation that is applied to sound regardless of the playing pattern(section)
+class ControlOperation(Operation):
+
+
+    def start(self):
+        print("stub")
+
+    def stop(self):
+        print("stub")

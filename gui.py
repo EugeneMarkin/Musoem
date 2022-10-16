@@ -28,7 +28,6 @@ class Gui(tk.Tk):
         self.pipe.parse_line(selection)
 
 
-
 if __name__ == "__main__":
     app = Gui()
     app.mainloop()
