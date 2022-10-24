@@ -9,6 +9,7 @@ from music21.stream.iterator import StreamIterator
 from music21.tempo import MetronomeMark
 from time_signature import TimeSignature
 from music21.meter.base import TimeSignature as M21TS
+from music21.converter import parse as parse_midi
 
 # This class parses the music21 tree of a score
 
@@ -299,3 +300,54 @@ class VoiceParser:
         num = float(mm.number)
         dur = float(mm.referent.quarterLength)
         return num / dur
+
+class MidiParser:
+
+    def __init__(self, file):
+        self.score = parse_midi(file)
+        self.pitch = []
+        self.octave = []
+        self.duration = []
+        self.sus = []
+        self.parse()
+
+    # each midi file is parsed as 1 measure
+    def parse(self):
+        # there should always be just one part
+        # the measures don't really make sense here,
+        # since midi file doen't know its time signature
+        # we also want to have only 1 voice, so we flatten the steam
+        elements = self.score.parts[0].flatten()
+        for el in elements:
+            if isinstance(el, Note):
+                self._parse_note(el)
+            elif isinstance(el, Chord):
+                self._parse_chord(el)
+            elif isinstance(el, Rest):
+                self._parse_rest(el)
+
+    def _parse_note(self, note):
+        self.pitch.append(self._get_scale_degree(note.pitch))
+        self.octave.append(note.octave)
+        self.duration.append(note.quarterLength)
+        self.sus.append(note.quarterLength)
+
+    def _parse_chord(self, chord):
+        p_map = map(lambda n: self._get_scale_degree(n.pitch), chord.notes)
+        o_map = map(lambda n: n.octave, chord.notes)
+        self.pitch.append(tuple(p_map))
+        self.octave.append(tuple(o_map))
+        self.duration.append(chord.quarterLength)
+        self.sus.append(chord.quarterLength)
+
+    def _parse_rest(self, rest):
+        self.pitch.append('rest')
+        self.octave.append('rest')
+        self.duration.append(rest.quarterLength)
+        self.sus.append(rest.quarterLength)
+
+    def _get_scale_degree(self, pitch):
+        # always use C chromatic scale for now
+        scale = ChromaticScale('C')
+        # scale degrees in FoxDot scales start from 0, thus -1
+        return scale.getScaleDegreeFromPitch(pitch, comparisonAttribute='pitchClass') - 1

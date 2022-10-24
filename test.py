@@ -111,3 +111,22 @@ def test5():
         print(m.description)
 
 test5()
+
+p = P[1, 2, 3]
+
+p1 >> MidiOut(channel = 1, degree = p)
+
+
+
+g = p.copy()
+
+p.extend([4])
+
+p = p*2
+
+print(p)
+
+print(max(len(p), len(g)))
+
+for w in p:
+    print(w)

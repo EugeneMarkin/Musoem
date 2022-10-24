@@ -2,12 +2,12 @@ import random
 
 class Command:
     def __init__(self):
-        self.reps = -1
+        self.loop = True
         self.dynamic_changes = []
         self.actions = []
 
     def __str__(self):
-        res = "reps: " + str(self.reps) + "\n"
+        res = "loop: " + str(self.loop) + "\n"
         res += "dynamic_changes: " + str(self.dynamic_changes) + "\n"
         res += "actions: " + str(self.actions)
         return res

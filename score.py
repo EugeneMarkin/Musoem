@@ -7,7 +7,7 @@ from time_signature import TimeSignature
 from FoxDot import Pattern
 from section import Section
 from music21.tempo import MetronomeMark
-from parsers import ScoreParser
+from parsers import ScoreParser, MidiParser
 from part import Part
 
 # A class representing an entire score
@@ -49,6 +49,12 @@ class Score:
         section = voice_part.section(from_measure, to_measure, instrument_key)
         print(section.description)
         return section
+
+    @classmethod
+    def midi_section(self, file, instrument, bpm = 120):
+        mp = MidiParser(file)
+        measure = Measure(1, mp.pitch, mp.octave, mp.duration, mp.sus, bpm, TimeSignature(4,4))
+        return Section([measure], instrument, file[:4])
 
     def _get_instrument_for_key(self, part_key, voice):
         if self._instr_map is None:

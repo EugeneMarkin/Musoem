@@ -26,6 +26,7 @@ class Section(object):
         # TODO: implement this
         self.ts = Pattern([])
         self.sus = Pattern([])
+        self.amp = Pattern([0.8]) # TODO: add parsing of dynamics to score parser
         self.wait = 0
         self.keyword = keyword
         self.operations = {}
@@ -33,6 +34,8 @@ class Section(object):
         self._next= None
         self._times = None
         self._isplaying = False
+        self._measures = measures
+        self._instrument_key = instrument_key
 
         for mes in measures:
             self.degree.extend(mes.degree)
@@ -81,6 +84,7 @@ class Section(object):
                                        dur = self.dur,
                                        sus = self.sus,
                                        bpm = self.bpm,
+                                       amp = self.amp,
                                        scale = Scale.chromatic)
         if times is not None:
             delay_beats = self._get_clock_beats(times * self._total_dur)
@@ -90,7 +94,7 @@ class Section(object):
 
     def apply(self, operation):
         self.operations[operation.keyword] = operation
-        print("applying operation ", operation.keyword, "to section ", self.keyword)
+        print("applying operation ", operation.keyword, operation, "to section ", self.keyword)
 
     def reset(self, operation_key = None):
         # TODO: impolement the operation reset
@@ -102,12 +106,16 @@ class Section(object):
 
     def display(self):
         res = self.keyword + " "
-        for operation in self.operations:
+        print("section ", self.keyword, "operations ", self.operations)
+        for operation in list(self.operations.values()):
             res += operation.keyword + " "
 
         if self._next is not None:
             res += self._next.display()
         return res
+
+    def copy(self):
+        return self.__class__(self._measures, instrument_key = self._instrument_key, keyword = self.keyword)
 
     @property
     def _average_tempo(self):
@@ -136,6 +144,9 @@ class Section(object):
     def once(self):
         self.play(1)
 
+    def reset(self):
+        print("resetting section")
+
     def __call__(self, times = None):
         return self.play(times)
 
@@ -157,7 +168,7 @@ class Section(object):
         if self == section:
             print("Warning: can't add section to itself")
             return self
-        return SectionGroup([self, section])
+        return SectionGroup([self, section], self.keyword + " and " + section.keyword)
 
     def __mul__(self, times):
         if isinstance(times, int):
@@ -194,16 +205,20 @@ class Section(object):
 
 class SectionStub(Section):
 
-    def play(self, time = None):
+    def play(self, times = None):
         print("playing section", self.keyword)
+
+    def __add__(self, section):
+        return SectionGroupStub([self, section], self.keyword + " and " + section.keyword)
 
 class SectionGroup(object):
 
-    def __init__(self, sections):
+    def __init__(self, sections, keyword = None):
         self._sections = sections
         self._times = None
         self._next = None
         self._isplaying = False
+        self.keyword = keyword
 
     def play(self, times = None):
         if self._isplaying:
@@ -233,6 +248,26 @@ class SectionGroup(object):
         if self._next is not None:
             self._next.play(self._next._times)
             self._next = None
+
+    def display(self):
+        res = ""
+        for section in self._sections:
+            res += section.display() + "\n"
+        return res
+
+    def apply(self, operation):
+        for section in self._sections:
+            section.apply(operation)
+
+    def copy(self):
+        sections_copy = []
+        for section in self._sections:
+            sections_copy.append(section.copy())
+        return self.__class__(sections_copy)
+
+    def reset(self):
+        print("resetting section group")
+
 
     def __call__(self):
         self.play()
@@ -272,27 +307,19 @@ class SectionGroup(object):
     def __invert__(self):
         self.stop()
 
+class SectionGroupStub(SectionGroup):
 
-# this is class for a
-# TODO: maybe rename this to Transformation or something
+    def play(self, times = None):
+        print("playing section group")
 
-# A class for music transformation
-class Operation:
-
-    def __init__(self, keyword):
-        self.keyword = keyword
-
-# A transformation that is applied to section of the score
-class SectionOperation(Operation):
-
-    def stub(self):
-        print("stub")
-# A transformation that is applied to sound regardless of the playing pattern(section)
-class ControlOperation(Operation):
-
-
-    def start(self):
-        print("stub")
-
-    def stop(self):
-        print("stub")
+    def __add__(self, section):
+        sections = self._sections.copy()
+        if isinstance(other, Section):
+            sections.append(other)
+            return SectionGroupStub(sections)
+        elif isinstance (other, SectionGroup):
+            sections.extend(other._sections)
+            return SectionGroupStub(sections)
+        else:
+            print("Warning: can't add GroupSection and", other)
+            return self
