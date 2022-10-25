@@ -31,10 +31,11 @@ class Part:
             octave = vp.octave
             duration = vp.duration
             sustain = vp.sus
+            amp = vp.amp
             bpm = mp.bpm
             ts = mp.ts
             id = mp.id
-            measure = Measure(id, pitch, octave, duration, sustain, bpm, ts)
+            measure = Measure(id, pitch, octave, duration, sustain, amp, bpm, ts)
             if voice_key not in self._voices:
                 voice = Voice(voice_key, [measure])
                 self._voices[voice_key] = voice

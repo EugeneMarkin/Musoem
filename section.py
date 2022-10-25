@@ -26,7 +26,7 @@ class Section(object):
         # TODO: implement this
         self.ts = Pattern([])
         self.sus = Pattern([])
-        self.amp = Pattern([0.8]) # TODO: add parsing of dynamics to score parser
+        self.amp = Pattern([]) # TODO: add parsing of dynamics to score parser
         self.wait = 0
         self.keyword = keyword
         self.operations = {}
@@ -43,6 +43,7 @@ class Section(object):
             self.dur.extend(mes.dur)
             self.sus.extend(mes.sus)
             self.bpm.extend(mes.bpm)
+            self.amp.extend(mes.amp)
 
         if instrument_key is not None:
             if "midi" in instrument_key:
@@ -199,7 +200,8 @@ class Section(object):
         res = "degree: " + str(self.degree) + ", "
         res += "octave: " + str(self.oct) + ", "
         res += "duration: " + str(self.dur) + ", "
-        res += "sustain: " + str(self.sus)
+        res += "sustain: " + str(self.sus) + ", "
+        res += "amp: " + str(self.amp) + ", "
         res += "bpm: " + str(self.bpm)
         return res
 

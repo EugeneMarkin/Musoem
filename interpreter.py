@@ -43,8 +43,11 @@ class CommandInterpreter:
             section = self._sequence_sections(sections)
             print("top level section is", section, "operations: ", operations)
             self._apply_operations_to_sections(operations, Pattern([section]))
+            last_section = self._find_last_section(section)
             if command.loop:
-                self._find_last_section(section)._times = None
+                last_section._times = None
+            else:
+                last_section._times = 1
             NowPlaying.add(section)
 
         elif len(operations) > 0:

@@ -125,6 +125,7 @@ class VoiceParser:
         self.bpm = prev_bpm.copy()
         self.part = part
         self.measure = measure
+        self.amp = [0.8] # TODO: implement dynamics
         for element in stream.iter:
             self._parse_element(element)
 
@@ -304,11 +305,12 @@ class VoiceParser:
 class MidiParser:
 
     def __init__(self, file):
-        self.score = parse_midi(file)
+        self.score = parse_midi(file, quantizePost = False)
         self.pitch = []
         self.octave = []
         self.duration = []
         self.sus = []
+        self.amp = []
         self.parse()
 
     # each midi file is parsed as 1 measure
@@ -327,27 +329,43 @@ class MidiParser:
                 self._parse_rest(el)
 
     def _parse_note(self, note):
+        print("parsing note", note)
+        next = note.next()
         self.pitch.append(self._get_scale_degree(note.pitch))
-        self.octave.append(note.octave)
-        self.duration.append(note.quarterLength)
+        self.octave.append(note.octave+1)
         self.sus.append(note.quarterLength)
+        self.amp.append(note.volume.velocityScalar)
+        if next is None:
+            self.duration.append(note.quarterLength)
+        else:
+            self.duration.append(next.offset - note.offset)
 
     def _parse_chord(self, chord):
+        print("parsing chord", chord)
         p_map = map(lambda n: self._get_scale_degree(n.pitch), chord.notes)
-        o_map = map(lambda n: n.octave, chord.notes)
+        o_map = map(lambda n: n.octave+1, chord.notes)
+        v_map = map(lambda n: n.volume.velocityScalar, chord.notes)
         self.pitch.append(tuple(p_map))
         self.octave.append(tuple(o_map))
+        self.amp.append(tuple(v_map))
         self.duration.append(chord.quarterLength)
         self.sus.append(chord.quarterLength)
 
     def _parse_rest(self, rest):
+        print("parsing rest", rest)
         self.pitch.append('rest')
         self.octave.append('rest')
         self.duration.append(rest.quarterLength)
         self.sus.append(rest.quarterLength)
+        self.amp.append(0)
 
     def _get_scale_degree(self, pitch):
         # always use C chromatic scale for now
         scale = ChromaticScale('C')
         # scale degrees in FoxDot scales start from 0, thus -1
         return scale.getScaleDegreeFromPitch(pitch, comparisonAttribute='pitchClass') - 1
+
+
+mp = MidiParser("/Users/eugenemarkin/Music/Midi/Mary_score/midi 1/had.mid")
+print(mp.duration)
+print(mp.sus)

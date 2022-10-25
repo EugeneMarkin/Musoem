@@ -1,30 +1,18 @@
 from section import SectionStub
 from operations import *
+from score import Score, MidiScore
 
 
 class CommandMap:
-    def __init__(self):
-        self.score = {}
+    def __init__(self, score):
+        self._load_score(score)
         self.operations = {}
         self.control = {}
 
-    # TODO: add load from file
-test_map = CommandMap()
-test_map.score = {"Mary" : SectionStub([], keyword = "Mary"),
-                  "had" : SectionStub([], keyword = "had"),
-                  "little" : SectionStub([], keyword = "little"),
-                  "lamb" : SectionStub([], keyword = "lamb"),
-                  "cow" : SectionStub([], keyword = "cow")}
-
-test_map.operations = {"reverse" : SectionOperation("reverse"),
-                       "transpose" : SectionOperation("transpose")}
-
-test_map.control = {"accel" : ControlOperation("accel"),
-                    "ritt" : ControlOperation("ritt")}
-
-
-default_map = CommandMap()
-default_map.operations = {"crescendo" : Crescendo(),
-                          "diminuendo" : Diminuendo()}
+    def _load_score(self, score):
+        if isinstance(score, MidiScore):
+            self.score = score.sections
+        elif isinstance(score, Score):
+            print("not implemented")
 
 # brian eno oblique strategies

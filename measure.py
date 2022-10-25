@@ -21,20 +21,22 @@ class Measure:
                  octave,
                  duration,
                  sustain,
+                 amp,
                  bpm,
                  ts):
         self.index: int = index # the original place of the measure in score (for reference)
         self.ts = ts
         self.bpm = Pattern(bpm)
-        self._parse_lists_into_patterns(pitch, octave, duration, sustain, bpm)
+        self._parse_lists_into_patterns(pitch, octave, duration, sustain, amp, bpm)
 
 
-    def _parse_lists_into_patterns(self, pitch, octave, dur, sus, bpm):
+    def _parse_lists_into_patterns(self, pitch, octave, dur, sus, amp, bpm):
         self.degree = Pattern([])
         self.oct = Pattern([])
         self.dur = Pattern([])
         self.sus = Pattern([])
-
+        self.amp = Pattern([])
+        # TODO: refactor this to use append not extend
         measure_dur = self.ts.numerator * (4 / self.ts.denominator)
         for i, p in enumerate(pitch):
             if (p == 'unpitched' or p == 'rest'):
@@ -43,6 +45,7 @@ class Measure:
                 if p == 'unpitched':
                     self.dur.extend([dur[i]])
                     self.sus.extend([sus[i]])
+                    self.amp.extend([amp[i]])
                 elif p == 'rest':
                     self.dur.extend([rest(dur[i])])
                     self.sus.extend([0])
@@ -55,6 +58,7 @@ class Measure:
                     self.oct.extend([octave[i]])
                 self.dur.extend([dur[i]])
                 self.sus.extend([sus[i]])
+                self.amp.extend([amp[i]])
 
 
     @property

@@ -9,6 +9,7 @@ from section import Section
 from music21.tempo import MetronomeMark
 from parsers import ScoreParser, MidiParser
 from part import Part
+import os
 
 # A class representing an entire score
 # Score consists of parts - single staff part in the MusicXML score
@@ -50,11 +51,7 @@ class Score:
         print(section.description)
         return section
 
-    @classmethod
-    def midi_section(self, file, instrument, bpm = 120):
-        mp = MidiParser(file)
-        measure = Measure(1, mp.pitch, mp.octave, mp.duration, mp.sus, bpm, TimeSignature(4,4))
-        return Section([measure], instrument, file[:4])
+
 
     def _get_instrument_for_key(self, part_key, voice):
         if self._instr_map is None:
@@ -79,3 +76,26 @@ class Score:
                 key = part.id + " voice: " + str(voice.id)
                 res[key] = voice.all
         return res
+
+class MidiScore(Score):
+    # TODO: preload all files in the folder
+    def __init__(self, folder_path, bpm):
+        self.folder = folder_path
+        self.bpm = bpm
+        self.sections = {}
+
+        dir = os.listdir(folder_path)
+        for instrument in dir:
+            if instrument[0] == ".":
+                continue
+            instrument_path = folder_path + "/" + instrument
+            instrument_dir = os.listdir(instrument_path)
+            for file in instrument_dir:
+                if ".mid" in file:
+                    section = self.midi_section(instrument_path + "/" + file, instrument, file[:-4])
+                    self.sections[section.keyword] = section
+
+    def midi_section(self, file, instrument, keyword):
+        mp = MidiParser(file)
+        measure = Measure(1, mp.pitch, mp.octave, mp.duration, mp.sus, mp.amp, self.bpm, TimeSignature(4,4))
+        return Section([measure], instrument, keyword)

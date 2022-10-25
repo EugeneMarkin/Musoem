@@ -5,7 +5,7 @@ from command import Command, OrList
 from interpreter import CommandInterpreter, NowPlaying
 from section import Section, SectionStub
 from operations import SectionOperation, ControlOperation
-from command_map import CommandMap, test_map
+from command_map import CommandMap
 
 class TextPipe:
 
@@ -24,6 +24,7 @@ class TextPipe:
 
         command = Command()
         res1 = re.findall(r'^([^\.\?\!]+)([\.\?\!]+)\s?$', line)
+        print("command is", res1)
         if len(res1) > 1:
             print("wrong command")
         elif len(res1) == 0:
@@ -33,6 +34,7 @@ class TextPipe:
         else:
             rep_str = res1[0][1]
             command.loop = False if len(rep_str) > 0 else True
+            print("loop", command.loop)
             command.dynamic_changes = self._parse_symbols(rep_str)
             expression = res1[0][0]
             command.actions = self._parse_expression(expression)
