@@ -1,10 +1,8 @@
-from operations import Section, SectionGroup, ControlOperation
-
-
 class NowPlaying:
 
     sections = {}
     control = {}
+    callback = None
 
     @classmethod
     def reset(self):
@@ -15,30 +13,52 @@ class NowPlaying:
         self.control = {}
 
     @classmethod
-    def add(self, obj, reps = None):
-        print("adding ", obj)
-        if isinstance(obj, Section) or isinstance(obj, SectionGroup):
-            obj.play(obj._times)
-            self.sections[obj.keyword] = obj
-        elif isinstance(obj, ControlOperation):
-            obj.play()
-            self.control[obj.keyword] = obj
+    def add_section(self, section):
+        section.play(section._times)
+        self.sections[section.keyword] = section
+
+    @classmethod
+    def add_operation(self, operation):
+        operation.play()
+        self.control[operation.keyword] = operation
 
     @classmethod
     def remove(self, keyword):
         if keyword in self.sections:
             section = self.sections[keyword]
-            section.stop()
+            if section._next is not None:
+                self.sections[section._next.keyword] = section._next
             self.sections.pop(keyword)
+        elif keyword in self.control:
+            self.control.pop(keyword)
+        if self.callback is not None:
+            self.callback()
+
+    @classmethod
+    def stop(self, keyword):
+        print("trying to remove keyword", keyword)
+        print("sections are", self.sections)
+        if keyword in self.sections:
+            section = self.sections[keyword]
+            section.stop()
         elif keyword in self.control:
             control_item = self.control[keyword]
             control_item.stop()
-            self.control.pop(keyword)
         else:
             # look for keyword in section operations
             for section in list(self.sections.values()):
-                if keyword in section.operations:
-                    section.reset(keyword)
+                current = section
+                while current._next is not None:
+                    NowPlaying.stop_operation(current, keyword)
+                    if current._next.keyword == keyword:
+                        current._next = None
+                        break
+                    current = current._next
+
+    @classmethod
+    def stop_operation(self, section, keyword):
+        if keyword in section.operations:
+            section.reset(keyword)
 
     @classmethod
     def display(self):
@@ -54,3 +74,7 @@ class NowPlaying:
     @classmethod
     def last_section(self):
         return self.sections[list(self.sections.keys())[-1]]
+
+    @classmethod
+    def bind_callback(self, callback):
+        self.callback = callback

@@ -48,7 +48,7 @@ class CommandInterpreter:
                 last_section._times = None
             else:
                 last_section._times = 1
-            NowPlaying.add(section)
+            NowPlaying.add_section(section)
 
         elif len(operations) > 0:
             print("got operations and no sections")
@@ -138,7 +138,7 @@ class CommandInterpreter:
         elif isinstance(result, SectionOperation):
             operations.append(result)
         elif isinstance(result, ControlOperation):
-            NowPlaying.add(result)
+            NowPlaying.add_operation(result)
         elif isinstance(result, Pattern):
             for item in result:
                 list_sections, list_operations = self._parse_result(item)

@@ -8,6 +8,7 @@ from FoxDot import MidiOut
 from FoxDot import Clock
 from FoxDot import rest
 from section_player import SectionPlayer
+from now_playing import NowPlaying
 
 # A Section is a FoxDot-friendly class that represents a section of music for
 # a signle part and single voice.
@@ -91,6 +92,7 @@ class Section(object):
             delay_beats = self._get_clock_beats(times * self._total_dur)
             Clock.future(delay_beats, self.stop)
 
+
         return self
 
     def apply(self, operation):
@@ -138,14 +140,20 @@ class Section(object):
     def stop(self):
         self._isplaying = False
         self.player.stop()
+        NowPlaying.remove(self.keyword)
         if self._next is not None:
             self._next.play(self._next._times)
             self._next = None
+
+    def cancel(self):
+        self._isplaying = False
+        self.player.stop()
 
     def once(self):
         self.play(1)
 
     def reset(self):
+        self.cancel()
         print("resetting section")
 
     def __call__(self, times = None):
@@ -250,6 +258,10 @@ class SectionGroup(object):
         if self._next is not None:
             self._next.play(self._next._times)
             self._next = None
+
+    def cancel(self):
+        for section in self._sections:
+            section.cancel()
 
     def display(self):
         res = ""

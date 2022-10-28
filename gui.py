@@ -8,6 +8,7 @@ class Gui(tk.Tk):
     def __init__(self):
         super().__init__()
         NowPlaying.reset()
+        NowPlaying.bind_callback(self.display_output)
         self.frame = tk.Frame(self)
         self.frame.pack()
         self.pipe = TextPipe(mary_map)
@@ -27,7 +28,7 @@ class Gui(tk.Tk):
             return 'break'
 
     def output_edit(self, event):
-        if event.keysym in ["KP_Down", "KP_Up", "KP_Left", "KP_Right"]:
+        if event.keysym in ["Down", "Up", "Left", "Right"]:
             return
         elif event.keysym != "BackSpace":
             return "break"
@@ -35,12 +36,13 @@ class Gui(tk.Tk):
         cursor = self.output.index(tk.INSERT)
         x = int(cursor.split(".")[0])
         y = int(cursor.split(".")[1])
-        symbol = self._get_symbol(x, y-1)
+
+        y_start = y-1
+        symbol = self._get_symbol(x, y_start)
         if symbol == ' ':
             return 'break'
-        y_start = y
         while y_start > 0:
-            symbol = self._get_symbol(x, y-1)
+            symbol = self._get_symbol(x, y_start-1)
             print(symbol)
             if symbol == ' ':
                 print("break")
@@ -54,13 +56,10 @@ class Gui(tk.Tk):
 
         range = (str(x) + "." + str(y_start), str(x) + "." + str(y_end))
         keyword = self.output.get(range[0], range[1])
-        self.stop(keyword)
+        NowPlaying.stop(keyword)
         self.output.delete(range[0], range[1])
         return 'break'
 
-    def stop(self, keyword):
-        print(keyword)
-        NowPlaying.remove(keyword)
 
     def execute(self):
         print("execute")
@@ -79,6 +78,7 @@ class Gui(tk.Tk):
     def _get_symbol(self, x, y):
          return self.output.get(str(x) + "." + str(y))
 
+
 if __name__ == "__main__":
     app = Gui()
     app.mainloop()
@@ -86,3 +86,5 @@ if __name__ == "__main__":
 
 # font size for particular words, bold, italic might mean something
 # Capital letters
+
+# litmus test
