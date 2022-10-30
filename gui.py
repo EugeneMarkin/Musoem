@@ -3,6 +3,7 @@ from text_pipe import TextPipe
 from command_map import CommandMap
 from mary_lamb import mary_map
 from now_playing import NowPlaying
+from command_parser import TextParser
 
 class Gui(tk.Tk):
     def __init__(self):
@@ -11,7 +12,7 @@ class Gui(tk.Tk):
         NowPlaying.bind_callback(self.display_output)
         self.frame = tk.Frame(self)
         self.frame.pack()
-        self.pipe = TextPipe(mary_map)
+        self.command_parser = TextParser(mary_map)
         self.input = tk.Text(self.frame, width = 100, height = 25)
         self.output = tk.Text(self.frame, width = 100, height = 25)
         self.input.bind("<Key>", self.key_press)
@@ -68,8 +69,8 @@ class Gui(tk.Tk):
         selection = self.input.get(line + "." + "0", line + "." + "end")
         print(selection)
         self.input.tag_add("sel", line + "." + "0", line + "." + "end")
-        self.pipe.parse_line(selection)
-        self.display_output()
+        statement = self.command_parser.parse_line(selection)
+        statement.execute()
 
     def display_output(self):
         self.output.delete("1.0", "end")

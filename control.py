@@ -142,26 +142,6 @@ class Mic(Control):
         else:
             return("wrong input", val)
 
-# implement wave etc.
 
-
-
-# also some sections as
-
-# toms, voices, drone
-
-#time_begins()
-
-#time_flies()
-
-#time_fails()
-
-#time_waits()
-
-#time_trembles()
-
-#time_runs_out()
-
-#time_ends()
-
-#and_begins_again()
+MasterVolume = Control(20, 0, 1, 0.5)
+MasterTempo = Control(0, 80, 180, 120)

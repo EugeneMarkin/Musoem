@@ -1,14 +1,7 @@
 from measure import Measure
-from FoxDot import Pattern
-from FoxDot import Player
-from FoxDot import FileSynthDef
-from FoxDot import Env
-from FoxDot import Scale
-from FoxDot import MidiOut
-from FoxDot import Clock
-from FoxDot import rest
+from FoxDot import Pattern, Player, FileSynthDef, Env, Scale, MidiOut, Clock, rest
 from section_player import SectionPlayer
-from now_playing import NowPlaying
+from playable import Playable
 
 # A Section is a FoxDot-friendly class that represents a section of music for
 # a signle part and single voice.
@@ -16,25 +9,21 @@ from now_playing import NowPlaying
 # Section contains FoxDot patterns that can be passed to a Player object:
     # pitch, octave, duration, bpm
 
-class Section(object):
+class Section(Playable):
 
     def __init__(self, measures:[Measure], instrument_key = None, keyword = None):
+        super().__init__(self, keyword)
+
         self.player = SectionPlayer()
         self.degree = Pattern([])
         self.oct = Pattern([])
         self.dur = Pattern([])
-        self.bpm = Pattern([])
+
         # TODO: implement this
         self.ts = Pattern([])
         self.sus = Pattern([])
         self.amp = Pattern([]) # TODO: add parsing of dynamics to score parser
-        self.wait = 0
-        self.keyword = keyword
         self.operations = {}
-
-        self._next= None
-        self._times = None
-        self._isplaying = False
         self._measures = measures
         self._instrument_key = instrument_key
 
@@ -64,16 +53,13 @@ class Section(object):
         self.instrument = MidiOut
         self.midi_channel = channel
 
-    def play(self, times = None):
-        if self.wait != 0:
-            Clock.future(self._get_clock_beats(self.wait), self.play, args=[times])
-            self.wait = 0
-            return self
+    @property
+    def patterns(self):
+        return [self.degree, self.oct, self.dur, self.sus, self.bpm, self.amp]
 
-        if self._isplaying:
-            print("Section already playing")
+    def play(self, times = None):
+        if super().play(times) is None:
             return self
-        self._isplaying = True
 
         if self.instrument is None:
             print("Can't play. Add an instrument first")
@@ -88,47 +74,14 @@ class Section(object):
                                        bpm = self.bpm,
                                        amp = self.amp,
                                        scale = Scale.chromatic)
-        if times is not None:
-            delay_beats = self._get_clock_beats(times * self._total_dur)
-            Clock.future(delay_beats, self.stop)
-
 
         return self
-
-    def apply(self, operation):
-        self.operations[operation.keyword] = operation
-        print("applying operation ", operation.keyword, operation, "to section ", self.keyword)
-
-    def reset(self, operation_key = None):
-        # TODO: impolement the operation reset
-        if operation is not None:
-            print("resetting operation", operation_key)
-        else:
-            for operation in list(self.operations.values()):
-                print("resetting operation", operation.keyword)
-
-    def display(self):
-        res = self.keyword + " "
-        print("section ", self.keyword, "operations ", self.operations)
-        for operation in list(self.operations.values()):
-            res += operation.keyword + " "
-
-        if self._next is not None:
-            res += self._next.display()
-        return res
 
     def copy(self):
         return self.__class__(self._measures, instrument_key = self._instrument_key, keyword = self.keyword)
 
     @property
-    def _average_tempo(self):
-        return sum(self.bpm)/len(self.bpm)
-
-    def _get_clock_beats(self, beats):
-        return beats * Clock.bpm / self._average_tempo
-
-    @property
-    def _total_dur(self):
+    def total_dur(self):
         res = 0
         for el in self.dur:
             if (isinstance(el, float) or isinstance(el, int)):
@@ -137,60 +90,13 @@ class Section(object):
                 res += el.dur
         return res
 
-    def stop(self):
-        self._isplaying = False
-        self.player.stop()
-        NowPlaying.remove(self.keyword)
-        if self._next is not None:
-            self._next.play(self._next._times)
-            self._next = None
-
-    def cancel(self):
-        self._isplaying = False
-        self.player.stop()
-
-    def once(self):
-        self.play(1)
-
-    def reset(self):
-        self.cancel()
-        print("resetting section")
-
-    def __call__(self, times = None):
-        return self.play(times)
-
-    def __rshift__(self, section):
-        if (not isinstance(section, Section)
-            and not isinstance(section, SectionGroup)):
-                print("Warning: can't schedule ", section, "after Section")
-                return self
-        if self == section:
-            print("Warning: can't schedule section after itself")
-            return self
-        self._next = section
-        return section
-
-    def __add__(self, section):
-        if not isinstance(section, Section):
-            print("Warning: can't add Section and", section)
-            return self
-        if self == section:
-            print("Warning: can't add section to itself")
-            return self
-        return SectionGroup([self, section], self.keyword + " and " + section.keyword)
-
-    def __mul__(self, times):
-        if isinstance(times, int):
-            self._times = times
-        return self
-
-    def __mod__(self, delay):
-        if (isinstance(delay, float) or isinstance(delay, int)):
-            self.wait = delay
-        return self
-
-    def __invert__(self):
-        self.stop()
+    def stop(self, keyword):
+        if keyword == self.keyword or keyword is None:
+            self.player.stop()
+        else:
+            ops = list(filter(lambda o: o.keyword == keyword, self.operations.values()))
+            map(lambda o: o.reset(), ops)
+        super().stop(keyword)
 
     # bypass the attributes other than player and instrument to the player
     # so when live coding we can apply pattern operations to the section object itself
@@ -220,120 +126,3 @@ class SectionStub(Section):
 
     def __add__(self, section):
         return SectionGroupStub([self, section], self.keyword + " and " + section.keyword)
-
-class SectionGroup(object):
-
-    def __init__(self, sections, keyword = None):
-        self._sections = sections
-        self._times = None
-        self._next = None
-        self._isplaying = False
-        self.keyword = keyword
-
-    def play(self, times = None):
-        if self._isplaying:
-            print("Group already playing")
-            return self
-        self._isplaying = True
-
-        for section in self._sections:
-            section(section._times)
-
-        if times is not None:
-            dur = max(list(map(lambda x: x._get_clock_beats(x._total_dur), self._sections)))
-            Clock.future(times * dur, self.stop)
-        else:
-            # TODO: simplify this by adding a function that returns total clock beats
-            all_times = list(map(lambda x: x._times, self._sections))
-            all_durs = list(map(lambda x: x._get_clock_beats(x._total_dur), self._sections))
-            if None not in all_times:
-                durs = [t * d for t, d in zip(all_times, all_durs)]
-                Clock.future(max(durs), self.stop)
-        return self
-
-    def stop(self):
-        self._isplaying = False
-        for section in self._sections:
-            section.stop()
-        if self._next is not None:
-            self._next.play(self._next._times)
-            self._next = None
-
-    def cancel(self):
-        for section in self._sections:
-            section.cancel()
-
-    def display(self):
-        res = ""
-        for section in self._sections:
-            res += section.display() + "\n"
-        return res
-
-    def apply(self, operation):
-        for section in self._sections:
-            section.apply(operation)
-
-    def copy(self):
-        sections_copy = []
-        for section in self._sections:
-            sections_copy.append(section.copy())
-        return self.__class__(sections_copy)
-
-    def reset(self):
-        print("resetting section group")
-
-
-    def __call__(self):
-        self.play()
-
-    def __add__(self, other):
-        if (other == self or other in self._sections):
-            print("Warning: section already in group")
-            return self
-
-        sections = self._sections.copy()
-        if isinstance(other, Section):
-            sections.append(other)
-            return SectionGroup(sections)
-        elif isinstance (other, SectionGroup):
-            sections.extend(other._sections)
-            return SectionGroup(sections)
-        else:
-            print("Warning: can't add GroupSection and", other)
-            return self
-
-    def __mul__(self, times):
-        if not isinstance(times, int):
-            return self
-        self._times = times
-
-    def __rshift__(self, next):
-        if (not isinstance(next, Section)
-            and not isinstance(next, SectionGroup)):
-                print("Warning: can't schedule ", next, "after SectionGroup")
-                return self
-        if (self == next or next in self._sections):
-            print("Warning: can't schedule same section after itself")
-            return self
-        self._next = next
-        return next
-
-    def __invert__(self):
-        self.stop()
-
-class SectionGroupStub(SectionGroup):
-
-    def play(self, times = None):
-        print("playing section group")
-
-    def __add__(self, section):
-        sections = self._sections.copy()
-        if isinstance(other, Section):
-            sections.append(other)
-            return SectionGroupStub(sections)
-        elif isinstance (other, SectionGroup):
-            sections.extend(other._sections)
-            return SectionGroupStub(sections)
-        else:
-            print("Warning: can't add GroupSection and", other)
-            return self
