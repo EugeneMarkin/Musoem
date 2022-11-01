@@ -329,7 +329,6 @@ class MidiParser:
                 self._parse_rest(el)
 
     def _parse_note(self, note):
-        print("parsing note", note)
         next = note.next()
         self.pitch.append(self._get_scale_degree(note.pitch))
         self.octave.append(note.octave+1)
@@ -341,7 +340,6 @@ class MidiParser:
             self.duration.append(next.offset - note.offset)
 
     def _parse_chord(self, chord):
-        print("parsing chord", chord)
         p_map = map(lambda n: self._get_scale_degree(n.pitch), chord.notes)
         o_map = map(lambda n: n.octave+1, chord.notes)
         v_map = map(lambda n: n.volume.velocityScalar, chord.notes)
@@ -352,7 +350,6 @@ class MidiParser:
         self.sus.append(chord.quarterLength)
 
     def _parse_rest(self, rest):
-        print("parsing rest", rest)
         self.pitch.append('rest')
         self.octave.append('rest')
         self.duration.append(rest.quarterLength)
@@ -364,8 +361,3 @@ class MidiParser:
         scale = ChromaticScale('C')
         # scale degrees in FoxDot scales start from 0, thus -1
         return scale.getScaleDegreeFromPitch(pitch, comparisonAttribute='pitchClass') - 1
-
-
-mp = MidiParser("/Users/eugenemarkin/Music/Midi/Mary_score/midi 1/had.mid")
-print(mp.duration)
-print(mp.sus)

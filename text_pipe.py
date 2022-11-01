@@ -62,7 +62,7 @@ class TextPipe:
 
 
     def _parse_my_expression(self, expr):
-        
+
 
     def _parse_symbols(self, string):
         dyn_change = []

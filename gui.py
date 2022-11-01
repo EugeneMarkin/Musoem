@@ -1,5 +1,4 @@
 import tkinter as tk
-from text_pipe import TextPipe
 from command_map import CommandMap
 from mary_lamb import mary_map
 from now_playing import NowPlaying
@@ -44,9 +43,7 @@ class Gui(tk.Tk):
             return 'break'
         while y_start > 0:
             symbol = self._get_symbol(x, y_start-1)
-            print(symbol)
             if symbol == ' ':
-                print("break")
                 break
             y_start = y_start - 1
         y_end = y

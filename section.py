@@ -12,7 +12,7 @@ from playable import Playable
 class Section(Playable):
 
     def __init__(self, measures:[Measure], instrument_key = None, keyword = None):
-        super().__init__(self, keyword)
+        super().__init__(keyword)
 
         self.player = SectionPlayer()
         self.degree = Pattern([])
@@ -23,7 +23,7 @@ class Section(Playable):
         self.ts = Pattern([])
         self.sus = Pattern([])
         self.amp = Pattern([]) # TODO: add parsing of dynamics to score parser
-        self.operations = {}
+
         self._measures = measures
         self._instrument_key = instrument_key
 
@@ -64,7 +64,6 @@ class Section(Playable):
         if self.instrument is None:
             print("Can't play. Add an instrument first")
             return self
-
         self.player = SectionPlayer()
         self.player >> self.instrument(channel = self.midi_channel,
                                        degree = self.degree,
@@ -74,7 +73,7 @@ class Section(Playable):
                                        bpm = self.bpm,
                                        amp = self.amp,
                                        scale = Scale.chromatic)
-
+        print("playing ", self, self.player)
         return self
 
     def copy(self):
@@ -90,7 +89,7 @@ class Section(Playable):
                 res += el.dur
         return res
 
-    def stop(self, keyword):
+    def stop(self, keyword = None):
         if keyword == self.keyword or keyword is None:
             self.player.stop()
         else:
@@ -100,14 +99,22 @@ class Section(Playable):
 
     # bypass the attributes other than player and instrument to the player
     # so when live coding we can apply pattern operations to the section object itself
-    def __setattr__(self, attr, value):
-        self.__dict__[attr] = value
-        if (attr != "player" and attr != "instrument"
-            and attr != "_times" and attr != "_next"):
-            self.player.__setattr__(attr, value)
+#    def __setattr__(self, attr, value):
+#        self.__dict__[attr] = value
+#        if (attr != "player" and attr != "instrument"
+#            and attr != "_times" and attr != "_next"):
+#            self.player.__setattr__(attr, value)
 
-    def __getattr__(self, name):
-        return self.player.__getattribute__(name)
+#    def __getattr__(self, name):
+#        return self.player.__getattribute__(name)
+
+    def display(self):
+        res = self.keyword + " "
+        for op_kw in self.operations.keys():
+            res += op_kw + " "
+        if self._next is not None:
+            res += self._next.display()
+        return res
 
     @property
     def description(self):

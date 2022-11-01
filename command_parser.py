@@ -1,8 +1,9 @@
 import random
 from section import Section
-from playable import PlayableGroup, ControlOperation
-from operations import SectionOperation, SectionOperationGroup, SectionOperationAndControl
+from playable import Playable, PlayableGroup
+from operations import SectionOperation, SectionOperationGroup
 from now_playing import NowPlaying
+import re
 import functools
 
 
@@ -11,114 +12,94 @@ class CommandStatement:
     def __init__(self, line, expression_mark = None, map = None):
         self.command_factory = CommandFactory(map)
         self.loop = True if expression_mark is None else False
+        self.wait = True if expression_mark == map.wait_mark else False
         self.top_playable = self._parse_line(line)
-        self.top_control = self._parse_expression_mark(self, expression_mark)
+        self.top_control = None
+        if expression_mark:
+            self.top_control = self._parse_line(expression_mark)
 
     def execute(self):
-        if isinstance(self.top_playable, Section) or isinstance(self.top_playable, Group):
-            NowPlaying.add_section(self.top_playable)
-        elif isinstance(top_playable, SectionGroup):
-        NowPlaying.add_control(self.top_control)
+        if isinstance(self.top_playable, Playable):
+            if self.wait:
+                NowPlaying.last() >> self.top_playable
+                return
+            if self.loop:
+                self.top_playable * -1
+            self.top_playable = self.top_playable.root
+            NowPlaying.play(self.top_playable)
+        elif isinstance(self.top_playable, SectionOperation):
+            list(map(lambda p: self.top_playable.copy().apply_to(p), NowPlaying.all()))
+            NowPlaying.update()
+        if self.top_control:
+            NowPlaying.play(self.top_control)
 
     def _parse_line(self, line):
         # top level sequence is divided by commas
-        top_playable = self.command_factory.command(line).result
-
-
-    def _parse_exression_mark(self, mark):
-
-        marks = []
-        for s in string:
-            if s == "!":
-                dyn_change.append("crescendo")
-            elif s == "?":
-                dyn_change.append("diminuendo")
-            else:
-                dyn_change.append(None)
-        return dyn_change
+        command = self.command_factory.command(line)
+        return command.result if command else None
 
 
     def __str__(self):
         res = "loop: " + str(self.loop) + "\n"
-        res += "dynamic_changes: " + str(self.dynamic_changes) + "\n"
-        res += "actions: " + str(self.actions)
+        res += "top_playable: " + str(self.top_playable) + "\n"
+        res += "top_control: " + str(self.top_control)
         return res
 
 class Command:
 
     def __init__(self, keyword, map):
         self.keyword = keyword
-        self.map = map
+        self._map = map
 
     @property
     def result(self):
         print("override me")
-
-    def __str__(self):
-        return self.keyword
-
-    def __repr__(self):
-        return self.keyword
 
 
 class SectionCommand(Command):
 
     @property
     def result(self):
-        return self.map.score(self.keyword)
+        return self._map.score[self.keyword].copy()
 
 class OperationCommand(Command):
 
     @property
     def result(self):
-        return self.map.operations(self.keyword)
-
-class OperationGroup(Command):
-
-    @property
-    def result(self):
-        return self.map.operations(self.keyword)
+        return self._map.operations[self.keyword].copy()
 
 class ControlCommand(Command):
 
     @property
     def result(self):
-        return self.map.control(self.keyword)
+        return self._map.control[self.keyword].copy()
 
 
 class SequenceCommand(Command):
 
     def __init__(self, seq, map):
-        self.map = map
+        self._map = map
         self.sequence = seq
 
     @property
     def result(self):
-        # first reduce ands and or's
-        res = self._parse_ands_ors(self.sequence):
-        # translate sequence into the actual playables/operations
-        res = _evaluate(res)
-        res = self._parse_sequence(res)
-        return res
-
-    def _evaluate(self, seq):
-        return list(map(lambda x: x.result, seq))
-
-    # reduces the 'and' and 'or' pairs to PlayableGroups
-    def _parse_ands_ors(self, sequence):
-        reduced = []
-        for i in range(1, len(sequence)-1):
-            left = self.sequence(i-1)
-            cur = self.sequence(i)
-            right = self.sequence(i+1)
-            if isinstance(cur, AndCommand) or isinstance(cur, OrCommand):
-                res.append(cur.reduce(left, right))
+        res = []
+        items = self.sequence.copy()
+        while len(items) > 2:
+            left = items[0]
+            cur = items[1]
+            right = items[2]
+            if isinstance(cur, CombinationCommand):
+                pair = PairCommand(self._map, cur, left, right)
+                items = [pair] + items[3:]
             else:
-                res.append(cur)
-        return reduced
-
-    def _parse_sequence(self, seq):
-        return functools.reduce(lambda a, b: self._reduce_pair(a,b), seq)
+                res.append(left)
+                items.pop(0)
+        res += items
+        res = list(filter(lambda x: not isinstance(x, CombinationCommand), res))
+        res = list(map(lambda x: x.result, res))
+        res = functools.reduce(self._reduce_pair, res)
+        return res
 
     def _reduce_pair(self, a, b):
         if isinstance(a, Playable)  and isinstance(b, Playable):
@@ -133,7 +114,36 @@ class SequenceCommand(Command):
             return SectionOperationGroup([a, b])
 
 
-class OrCommand(Command):
+class PauseSequenceCommand(SequenceCommand):
+
+    @property
+    def result(self):
+        l = list(map(lambda x: x.result, self.sequence))
+        for p in l[1:]:
+            if isinstance(p, Playable):
+                p % self._map.pause_time
+        res = functools.reduce(self._reduce_pair, l)
+        return res
+
+class PairCommand(Command):
+
+    def __init__(self, map, combination_command, left, right):
+        self._map = map
+        self.command = combination_command
+        self.left = left
+        self.right = right
+
+    @property
+    def result(self):
+        return self.command.reduce(self.left.result, self.right.result)
+
+
+class CombinationCommand(Command):
+
+    def reduce(self, left, right):
+        print("override me")
+
+class OrCommand(CombinationCommand):
 
     def reduce(self, left, right):
         return random.choice([left, right])
@@ -144,15 +154,12 @@ class OrCommand(Command):
     def __repr__(self):
         return str("or")
 
+class AndCommand(CombinationCommand):
 
-class AndCommand(Command):
-
-    def __init__(self):
-
-    def reduce(self, left, right):
+    def reduce(self, a, b):
         if isinstance(a, Playable)  and isinstance(b, Playable):
             return PlayableGroup([a, b])
-        elif isinstance(a, Playble) and isinstance(b, SectionOperation):
+        elif isinstance(a, Playable) and isinstance(b, SectionOperation):
             b.apply_to(a)
             return a
         elif isinstance(a, SectionOperation) and isinstance(b, Playable):
@@ -171,39 +178,42 @@ class AndCommand(Command):
 class CommandFactory:
 
     def __init__(self, map):
-        self.map = map
+        self._map = map
 
     def command(self, key):
-        if key == "" or key == " "
+        if key == "" or key == " ":
             return None
-
-        comma_seq = key.split(",")
-        space_seq = key.split(" ")
-        try:
-            comma_seq.remove(" ")
-            comma_seq.remove("")
-            space_seq.remove(" ")
-            space_seq.remove("")
-        except:
-            pass
-
+        filt = lambda x: x != " " and x != ""
+        comma_seq = list(filter(filt, key.split(",")))
         if len(comma_seq) > 1:
-            return SequenceCommand(key.split(","), map)
+            l = self._list_commands(comma_seq)
+            return PauseSequenceCommand(l, self._map)
         else:
             key = comma_seq[0]
 
+        space_seq = list(filter(filt, key.split(" ")))
         if len(space_seq) > 1:
-            return SequenceCommand(key.split(","))
-        if key in self.map.score:
-            return SectionCommand(key, map)
-        elif key in self.map.operations:
-            return OperationCommand(key, map):
-        elif key in self.map.control:
-            return ControlCommand(key, map)
-        elif key in self.map.andKeywords:
-            return AndCommand()
-        elif key in self.map.orKeywords:
-            return OrCommand()
+            l = self._list_commands(space_seq)
+            return SequenceCommand(l, self._map)
+        else:
+            key = space_seq[0]
+        if key in self._map.score:
+            return SectionCommand(key, self._map)
+        elif key in self._map.operations:
+            return OperationCommand(key,self._map)
+        elif key in self._map.control:
+            return ControlCommand(key, self._map)
+        elif key in self._map.andKeywords:
+            return AndCommand(key, self._map)
+        elif key in self._map.orKeywords:
+            return OrCommand(key, self._map)
+
+
+
+    def _list_commands(self, seq):
+        l = list(map(lambda x: self.command(x) , seq))
+        l = list(filter(lambda x: x is not None, l))
+        return l
 
 class TextParser:
 
@@ -211,10 +221,10 @@ class TextParser:
         self._map = command_map
 
     def parse_line(self, line):
-        res = re.findall(r'^([^\.\?\!]+)([\.\?\!]+)\s?$', line)
+        res = re.findall(r'^([^\.\?\!\;]+)([\.\?\!\;]+)\s?$', line)
+        statement = None
         if len(res) == 0: # there is no mark in the end of sentence
             statement = CommandStatement(line, map = self._map)
         else:
-            statement = CommandStatement(res[0][0], res[0][1], self._map)
-
+            statement = CommandStatement(res[0][0], res[0][1], map = self._map)
         return statement

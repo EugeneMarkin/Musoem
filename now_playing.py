@@ -5,17 +5,15 @@ class NowPlaying:
 
     @classmethod
     def reset(self):
-        for item in self.playing.values():
+        for item in list(self.playing.values()).copy():
             item.stop()
-            item.reset()
         self.playing = {}
 
     @classmethod
     def play(self, playable):
         playable(playable._times)
         self.playing[playable.keyword] = playable
-        if self.callback is not None:
-            self.callback()
+        self.callback()
 
     @classmethod
     def apply_operation(self, operation, section):
@@ -25,34 +23,45 @@ class NowPlaying:
     @classmethod
     def remove(self, keyword):
         if keyword in self.playing:
-            playable = self.playing[keyword]
+            if self.playing[keyword]._next is not None:
+                playable = self.playing[keyword]._next
+                self.playing[playable.keyword] = playable
             self.playing.pop(keyword)
-
-        if self.callback is not None:
             self.callback()
-
 
     @classmethod
     def stop(self, keyword):
         if keyword in self.playing:
             self.playing[keyword].stop()
-        else:
-            map(lambda p: p.stop(keyword), self.playing)
+            return
+
+        for p in self.playing.values():
+            p.stop(keyword)
+
+
 
     @classmethod
     def display(self):
         res = ""
-        print(self.sections, self.control)
-        for section in list(self.sections.values()):
-            res += section.display() + "\n"
-        for control_item in list(self.control.values()):
-            res += control.keyword + " "
+        for playable in list(self.playing.values()):
+            res += playable.display() + "\n"
         return res
 
+    @classmethod
+    def all(self):
+        return list(self.playing.values())
 
     @classmethod
-    def last_section(self):
-        return self.sections[list(self.sections.keys())[-1]]
+    def update(self):
+        self.callback()
+
+    @classmethod
+    def last(self):
+        durs = list(map(lambda x: x.time_till_end, self.playing.values()))
+        if None in durs:
+            return list(self.playing.values())[durs.index(None)]
+        else:
+            return list(self.playing.values())[durs.index(max(durs))]
 
     @classmethod
     def bind_callback(self, callback):
