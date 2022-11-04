@@ -9,20 +9,20 @@ from playable import Playable
 # Section contains FoxDot patterns that can be passed to a Player object:
     # pitch, octave, duration, bpm
 
+pattern_keys = ["degree", "oct", "dur", "sus", "bpm", "amp"]
+
 class Section(Playable):
 
-    def __init__(self, measures:[Measure], instrument_key = None, keyword = None):
+    def __init__(self, measures:[Measure], instrument_key = None, keyword = "None"):
         super().__init__(keyword)
 
         self.player = SectionPlayer()
-        self.degree = Pattern([])
-        self.oct = Pattern([])
-        self.dur = Pattern([])
+
+        self.vals = [Pattern([]) for _ in pattern_keys]
+        self.patterns = dict(zip(pattern_keys, self.vals))
 
         # TODO: implement this
         self.ts = Pattern([])
-        self.sus = Pattern([])
-        self.amp = Pattern([]) # TODO: add parsing of dynamics to score parser
 
         self._measures = measures
         self._instrument_key = instrument_key
@@ -53,12 +53,8 @@ class Section(Playable):
         self.instrument = MidiOut
         self.midi_channel = channel
 
-    @property
-    def patterns(self):
-        return [self.degree, self.oct, self.dur, self.sus, self.bpm, self.amp]
-
     def play(self, times = None):
-        if super().play(times) is None:
+        if super().play() is None:
             return self
 
         if self.instrument is None:
@@ -74,6 +70,7 @@ class Section(Playable):
                                        amp = self.amp,
                                        scale = Scale.chromatic)
         print("playing ", self, self.player)
+        print("patterns", self.patterns)
         return self
 
     def copy(self):
@@ -81,50 +78,53 @@ class Section(Playable):
 
     @property
     def total_dur(self):
+        if self._times == None:
+            return None
         res = 0
         for el in self.dur:
             if (isinstance(el, float) or isinstance(el, int)):
                 res += el
             elif isinstance(el, rest):
                 res += el.dur
-        return res
+        return res * self._times
 
-    def stop(self, keyword = None):
-        if keyword == self.keyword or keyword is None:
+    def stop(self):
+        if self._isplaying:
             self.player.stop()
-        else:
-            ops = list(filter(lambda o: o.keyword == keyword, self.operations.values()))
-            map(lambda o: o.reset(), ops)
-        super().stop(keyword)
+        super().stop()
+
+    @property
+    def loop(self):
+        self * -1
+        return self
 
     # bypass the attributes other than player and instrument to the player
     # so when live coding we can apply pattern operations to the section object itself
-#    def __setattr__(self, attr, value):
-#        self.__dict__[attr] = value
-#        if (attr != "player" and attr != "instrument"
-#            and attr != "_times" and attr != "_next"):
-#            self.player.__setattr__(attr, value)
+    def __setattr__(self, attr, value):
+        self.__dict__[attr] = value
+        if attr in pattern_keys:
+            self.patterns[attr] = value
+            self.player.__setattr__(attr, value)
 
-#    def __getattr__(self, name):
-#        return self.player.__getattribute__(name)
+    def __getattr__(self, name):
+        if name in pattern_keys:
+            return self.patterns[name]
+        else:
+            return None
 
-    def display(self):
-        res = self.keyword + " "
-        for op_kw in self.operations.keys():
-            res += op_kw + " "
-        if self._next is not None:
-            res += self._next.display()
-        return res
+    def __getitem__(self, key):
+        if key in self.patterns:
+            return self.patterns[key]
+        else:
+            return None
+
+    def __setitem__(self, key, value):
+        if key in self.patterns:
+            self.__setattr__(key, value)
 
     @property
     def description(self):
-        res = "degree: " + str(self.degree) + ", "
-        res += "octave: " + str(self.oct) + ", "
-        res += "duration: " + str(self.dur) + ", "
-        res += "sustain: " + str(self.sus) + ", "
-        res += "amp: " + str(self.amp) + ", "
-        res += "bpm: " + str(self.bpm)
-        return res
+        return str(self.patterns)
 
 class SectionStub(Section):
 

@@ -26,12 +26,11 @@ class CommandStatement:
             if self.loop:
                 self.top_playable * -1
             self.top_playable = self.top_playable.root
-            NowPlaying.play(self.top_playable)
+            self.top_playable()
         elif isinstance(self.top_playable, SectionOperation):
             list(map(lambda p: self.top_playable.copy().apply_to(p), NowPlaying.all()))
-            NowPlaying.update()
         if self.top_control:
-            NowPlaying.play(self.top_control)
+            self.top_control()
 
     def _parse_line(self, line):
         # top level sequence is divided by commas
@@ -111,7 +110,7 @@ class SequenceCommand(Command):
             a.apply_to(b)
             return b
         elif isinstance(a, SectionOperation) and isinstance(b, SectionOperation):
-            return SectionOperationGroup([a, b])
+            return a + b
 
 
 class PauseSequenceCommand(SequenceCommand):
@@ -158,7 +157,7 @@ class AndCommand(CombinationCommand):
 
     def reduce(self, a, b):
         if isinstance(a, Playable)  and isinstance(b, Playable):
-            return PlayableGroup([a, b])
+            return a + b
         elif isinstance(a, Playable) and isinstance(b, SectionOperation):
             b.apply_to(a)
             return a

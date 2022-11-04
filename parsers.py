@@ -125,9 +125,10 @@ class VoiceParser:
         self.bpm = prev_bpm.copy()
         self.part = part
         self.measure = measure
-        self.amp = [0.8] # TODO: implement dynamics
+        self.amp = [] # TODO: implement dynamics
         for element in stream.iter:
             self._parse_element(element)
+        for el in self.pitch: self.amp.append(0.8)
 
     def _parse_element(self, element):
 

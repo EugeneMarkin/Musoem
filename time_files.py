@@ -3,6 +3,9 @@ sys.path.append("/Users/eugenemarkin/Projects/scoredot")
 from score import Score
 from music21.stream.base import Score as M21Score
 from music21 import converter
+
+from myclick import Click
+
 # score file path
 fp = "~/Documents/time_files_full.musicxml"
 # load the score into musc21
@@ -32,7 +35,7 @@ ab = sbAB + smAB + ssAB + shAB
 #
 clickA = Click(120)
 #
-time_flies = sbAB + (smAB % (12*4)) + (ssAB % (18*4)) + (shAB % (12*4)) + clickA
+time_flies = (sbAB * -1) + ((smAB % (12*4))*-1) + ((ssAB % (18*4))*-1) + ((shAB % (12*4))*-1) + clickA
 # B "Time waits": 69 to 86
 fbhB = score.section(69, 76, "FB Hi") # 4 times
 fbmB = score.section(77, 83, "FB Mid") # once

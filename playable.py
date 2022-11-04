@@ -1,34 +1,25 @@
 from FoxDot import Pattern, Clock
 from now_playing import NowPlaying
 from functools import reduce
-
-# Control Operation is a keyword operation that
-# affects the global parameters of sound/tempo/dynamics
-# regardless of the currently playing section(s)
-
-# Control operation is a Playable
-# which means that it can be added, or sequenced
-# with Section objects
+from entity import Entity
 
 # A base class for Playable objects:
 # Section, SectionGroup, ControlOperation
+class Playable(Entity):
 
-class Playable(object):
-
-    def __init__(self, keyword = None):
-        self.keyword = keyword
+    def __init__(self, keyword = "None"):
+        super().__init__(keyword)
         self.wait = 0 # a delay to wait before starting to play
         self._next = None # next Playable object after this one
         self._parent = None
         self._times = 1 # the number of repeats (gets overriden if different value is passed to play())
         self._isplaying = False
         self.operations = {}
-        self.bpm = Pattern([])
 
     # start playing with "times" repeats and "self.wait" delay
-    def play(self, times = None):
+    def play(self):
         if self.wait != 0:
-            Clock.future(self._get_clock_beats(self.wait), self.play, args=[times])
+            Clock.future(self._get_clock_beats(self.wait), self.play)
             self.wait = 0
             return None
 
@@ -39,29 +30,24 @@ class Playable(object):
 
         self._parent = None
 
-        if times is not None:
-            delay_beats = self._get_clock_beats(times * self.total_dur)
+        if self._times is not None:
+            delay_beats = self._get_clock_beats(self.total_dur)
             Clock.future(delay_beats, self.stop)
+
+        NowPlaying.add(self)
 
         return self
 
     # stops the current playable and triggers the next thats linked to it
-    def stop(self, keyword = None):
-        if keyword is None or keyword == self.keyword:
+    def stop(self):
+        if self._isplaying:
             self._isplaying = False
-            NowPlaying.remove(self.keyword)
+            NowPlaying.remove(self)
             if self._next is not None:
-                self._next.play(self._next._times)
+                self._next()
                 self._next = None
-            return
-
-        l = list(filter(lambda p: p.keyword == keyword, self))
-        if len(l) > 0:
-            for p in l: p.cancel()
         else:
-            filtered = list(filter(lambda p: keyword in p.operations, self))
-            for f in filtered: f.operations[keyword].reset()
-
+            self.cancel()
 
     # stops the playable and doesn't trigger next
     # if it is not playing but is scheduled, it removes itself from the parent
@@ -77,11 +63,16 @@ class Playable(object):
 
     # the represenation of the Playable in the performance window
     def display(self):
-        res = self.keyword + " "
+        res = [self]
+        for op in self.operations.values(): res.append(op)
 
         if self._next is not None:
             res += self._next.display()
         return res
+
+    @property
+    def display_style(self):
+        return "normal"
 
     @property
     def root(self):
@@ -95,8 +86,8 @@ class Playable(object):
         return iter(self)[-1]
 
     # call is duplicating the play function
-    def __call__(self, times = None):
-        self.play(times)
+    def __call__(self):
+        self.play()
 
     # set next playable after this one
     def __rshift__(self, other):
@@ -165,7 +156,7 @@ class Playable(object):
         durs = []
         for p in self:
             if p._times is not None:
-                durs.append(self._get_clock_beats(p._times * p.total_dur))
+                durs.append(self._get_clock_beats(p.total_dur))
             else:
                 return None
         return sum(durs)
@@ -173,45 +164,41 @@ class Playable(object):
 class PlayableGroup(Playable):
 
     def __init__(self, playables):
-        super().__init__(reduce(lambda a,b: a.keyword + b.keyword, playables))
+        super().__init__(reduce(lambda a,b: a.keyword + "," + b.keyword, playables))
         self.playables = playables
 
-    def play(self, times = None):
-        if self._isplaying:
-            print("Group already playing")
+    def play(self):
+        if super().play() is None:
             return self
-        self._isplaying = True
 
-        for p in self: p(p._times)
+        for p in self: p()
 
-        if times is not None:
-            dur = max(list(map(lambda x: x._get_clock_beats(x.total_dur), self)))
-            Clock.future(times * dur, self.stop)
+        if self._times is not None:
             return self
 
         # TODO: simplify this by adding a function that returns total clock beats
         all_times = list(map(lambda x: x._times, self))
-        all_durs = list(map(lambda x: x._get_clock_beats(x.total_dur), self))
         if None not in all_times:
-            durs = [t * d for t, d in zip(all_times, all_durs)]
-            Clock.future(max(durs), self.stop)
+            all_durs = list(map(lambda x: x._get_clock_beats(x.total_dur), self))
+            Clock.future(max(all_durs), self.stop)
+
         return self
 
-    def stop(self, keyword = None):
-        if keyword is None or keyword == self.keyword:
-            self._isplaying = False
+    def stop(self):
+        if self._isplaying:
             for p in self: ~p
-            if self._next is not None:
-                self._next.play(self._next._times)
-                self._next = None
-            return
-        for p in self: p.stop(keyword)
+        super().stop()
 
-    def cancel(self):
-        for p in self: p.cancel()
 
     def copy(self):
         return self.__class__(list(map(lambda p: p.copy(), self)))
+
+    def append(self, other):
+        if isinstance(other, PlayableGroup):
+            for p in other: self.append(p)
+        else:
+            self.playables.append(other)
+            self.keyword += "," + other.keyword
 
     def __add__(self, other):
         if other in self:
@@ -220,7 +207,8 @@ class PlayableGroup(Playable):
             for pl in self:
                 if other in pl:
                     other = other.copy()
-        return self.__class__([self, other])
+        self.append(other)
+        return self
 
     def __rshift__(self, other):
         if other is self:
@@ -243,9 +231,16 @@ class PlayableGroup(Playable):
     def __contains__(self, obj):
         return obj in self.playables
 
+    def display(self):
+        return [self]
+
     @property
     def total_dur(self):
-        return max(list(map(lambda x: x.total_dur, self)))
+        durs = list(map(lambda x: x.total_dur, self))
+        if None not in durs:
+            return max(durs)
+        else:
+            return None
 
     @property
     def average_tempo(self):
@@ -266,7 +261,7 @@ class ControlOperation(Playable):
         self.kwargs = kwargs
         self.dur = dur
 
-    def play(self, times = None):
+    def play(self):
         if super().play() is None:
             return self
         self.execute()
@@ -274,11 +269,8 @@ class ControlOperation(Playable):
     def execute(self):
         print("override me")
 
-    def stop(self, keyword = None):
-        super().stop(keyword)
-
-    def finish(self):
-        print("override me")
+    def stop(self):
+        super().stop()
 
     def cancel(self):
         # not sure how to do that
@@ -289,6 +281,10 @@ class ControlOperation(Playable):
 
     def reset(self):
         print("reset")
+
+    @property
+    def display_style(self):
+        return "wide"
 
     @property
     def total_dur(self):
