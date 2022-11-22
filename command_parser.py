@@ -19,6 +19,8 @@ class CommandStatement:
             self.top_control = self._parse_line(expression_mark)
 
     def execute(self):
+        if self.top_control:
+            self.top_control()
         if isinstance(self.top_playable, Playable):
             if self.wait:
                 NowPlaying.last() >> self.top_playable
@@ -29,8 +31,7 @@ class CommandStatement:
             self.top_playable()
         elif isinstance(self.top_playable, SectionOperation):
             list(map(lambda p: self.top_playable.copy().apply_to(p), NowPlaying.all()))
-        if self.top_control:
-            self.top_control()
+
 
     def _parse_line(self, line):
         # top level sequence is divided by commas

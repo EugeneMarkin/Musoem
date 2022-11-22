@@ -253,12 +253,10 @@ class PlayableGroup(Playable):
         return max(times)
 
 
-class ControlOperation(Playable):
+class Control(Playable):
 
-    def __init__(self, keyword, control, dur, kwargs = {}):
+    def __init__(self, keyword, dur):
         super().__init__(keyword)
-        self.control = control
-        self.kwargs = kwargs
         self.dur = dur
 
     def play(self):
@@ -277,7 +275,7 @@ class ControlOperation(Playable):
         super().cancel()
 
     def copy(self):
-        return self.__class__(self.keyword, self.control, self.dur, self.kwargs)
+        return self.__class__(self.keyword, self.dur)
 
     def reset(self):
         print("reset")
@@ -291,5 +289,5 @@ class ControlOperation(Playable):
         return self.dur
 
     @property
-    def averege_tempo(self):
+    def average_tempo(self):
         return Clock.bpm

@@ -70,7 +70,6 @@ class Section(Playable):
                                        amp = self.amp,
                                        scale = Scale.chromatic)
         print("playing ", self, self.player)
-        print("patterns", self.patterns)
         return self
 
     def copy(self):

@@ -1,7 +1,7 @@
 from music21.dynamics import Dynamic
 from FoxDot import PRange, Pattern
 from section import Section
-from playable import PlayableGroup, ControlOperation
+from playable import PlayableGroup, Control
 from now_playing import NowPlaying
 
 # A class for music transformation
@@ -24,7 +24,7 @@ class SectionOperation:
             # apply to each playable in group
             for p in playable: self.copy().apply_to(p)
             return
-        elif isinstance(playable, ControlOperation):
+        elif isinstance(playable, Control):
             # operations can't be applied to control, so we look for sections
             if playable._parent is not None:
                 self.apply_to(playable._parent)
@@ -116,19 +116,21 @@ class Retrograde(SectionOperation):
         self.section.dur = self.section.dur.reverse()
 
 
-class TransposeOperation(SectionOperation):
+class Transpose(SectionOperation):
 
-    def __init__(self):
-        super().init(["degree", "dur"])
+    def __init__(self, kw, t):
+        self.t = t
+        super().__init__(kw)
+
+    def pattern_keys(self):
+        return ["degree"]
+
+    def copy(self):
+        return self.__class__(self.keyword, self.t)
 
     def execute(self):
-        self.section.degree.reverse()
-        self.section.dur.reverse()
+        self.section.degree = self.section.degree + self.t
 
-class ReverseDurations(SectionOperation):
-
-    def execute(self):
-        self.section.dur.reverse()
 
 class Crescendo(SectionOperation):
 

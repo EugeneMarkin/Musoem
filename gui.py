@@ -1,6 +1,7 @@
 import tkinter as tk
 from command_map import CommandMap
 from mary_lamb import mary_map
+from drums import drum_map
 from now_playing import NowPlaying
 from command_parser import TextParser
 from functools import reduce
@@ -16,7 +17,6 @@ class Tag:
         self.playable = playable
 
     def apply_to(self, text):
-        print("range is", self.range)
         start = str(self.line) + "." + str(self.range[0])
         end = str(self.line) + "." + str(self.range[-1])
         text.tag_add(self.id, start, end)
@@ -43,7 +43,7 @@ class Gui(tk.Tk):
         self.frame = tk.Frame(self)
         self.frame.configure(padx=0, pady=0, relief = "flat", bd=1)
         self.frame.pack(fill = "both", expand = True, ipadx=0, ipady=0)
-        self.command_parser = TextParser(mary_map)
+        self.command_parser = TextParser(drum_map)
         self.input = tk.Text(self.frame, width = 50, height = 1)
         self.output = tk.Text(self.frame, width = 50, height = 20)
 
@@ -59,8 +59,6 @@ class Gui(tk.Tk):
 
 
     def key_press(self, event):
-        print("key press")
-        print(event)
         if event.keysym == "Return" and (event.state & 0x0004): # mask for ctrl key
             self.execute()
             return 'break'
@@ -82,7 +80,6 @@ class Gui(tk.Tk):
         return 'break'
 
     def execute(self):
-        print("execute")
         cursor = self.input.index(tk.INSERT)
         line = cursor.split(".")[0]
         selection = self.input.get(line + "." + "0", line + "." + "end")

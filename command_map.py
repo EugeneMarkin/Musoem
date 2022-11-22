@@ -1,7 +1,7 @@
 from section import SectionStub
 from operations import *
 from score import Score, MidiScore
-from control_operations import Crescendo
+from control_operations import crescendo
 
 
 class CommandMap:
@@ -10,8 +10,8 @@ class CommandMap:
         self._load_score(score)
         self.operations = {}
         self.wait_mark = ";"
-        self.control = {"!" : Crescendo.new("!",dur = 5, fromval = "ppp", toval = "fff"),
-                        "?" : Crescendo.new("?", dur = 5, fromval = "fff", toval = "ppp")}
+        self.control = {"!" : crescendo("!",dur = 10, fromval = "ppp", toval = "fff"),
+                        "?" : crescendo("?", dur = 10, fromval = "fff", toval = "ppp")}
         self.andKeywords = ["and", "And"]
         self.orKeywords = ["or", "Or"]
         self.pause_time = 2 # in beats

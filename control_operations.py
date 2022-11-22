@@ -1,22 +1,10 @@
 from music21.dynamics import Dynamic
-from control import MasterTempo, MasterVolume
-from playable import ControlOperation
+from control import MidiControl
 
-class Crescendo(ControlOperation):
+def crescendo(keyword, fromval, toval, dur):
+    from_v = Dynamic(fromval).volumeScalar
+    to_v = Dynamic(toval).volumeScalar
+    return MidiControl(keyword, 17, from_v, to_v, dur)
 
-    @classmethod
-    def new(self, keyword, dur, fromval, toval):
-        from_val = Dynamic(fromval).volumeScalar
-        to_val = Dynamic(toval).volumeScalar
-        return Crescendo(keyword, MasterVolume, dur, {"to_val" : to_val, "from_val" : to_val})
-
-    def execute(self):
-        print("executing control")
-
-    def finish(self):
-        print("finish control")
-
-class TempoChange(ControlOperation):
-
-    def __init__(self, to_val, dur):
-        print("foo")
+def reverb(keyword, fromval, toval, dur):
+    return MidiControl(keyword, 18, fromval, toval, dur)

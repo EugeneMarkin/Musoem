@@ -1,10 +1,49 @@
 from FoxDot import MidiOut
 from section_player import SectionPlayer
-from FoxDot import Clock
-from FoxDot import TimeVar
-from FoxDot import Scale
+from FoxDot import Clock, TimeVar, Pattern, Scale
+from playable import Control
 
-class Control(object):
+class MidiControl(Control):
+
+    def __init__(self, keyword, midinote, start_v, end_v, dur = 1):
+        super().__init__(keyword, dur)
+        self.dur = dur
+        self.keyword = keyword
+        self.midinote = midinote
+        self.start_v = start_v
+        self.end_v = end_v
+        self.dur = dur
+        bpm = 720
+        if dur > 1:
+            length = int((bpm / 60) * dur)
+            self.pattern = Pattern([start_v + (i*(end_v - start_v)/(length-1)) for i in range(0, length)])
+            print("pattern is ", self.pattern)
+        else:
+            length = 1
+            self.pattern = end_v
+        self.midiout = MidiOut(channel = 15,
+                               oct = 0,
+                               degree = midinote,
+                               amp = self.pattern,
+                               scale = Scale.chromatic,
+                               dur = dur/length)
+
+    def execute(self):
+        print("execute control")
+        self.player = SectionPlayer()
+        self.player >> self.midiout
+
+    def copy(self):
+        return self.__class__(self.keyword, self.midinote, self.start_v, self.end_v, self.dur)
+
+    def stop(self):
+        super().stop()
+        self.player.stop()
+
+
+
+
+class MidiControl1(object):
 
     def __init__(self, midinote, min, max, default_amp):
         self.min = min
@@ -141,7 +180,3 @@ class Mic(Control):
             return 10.0 / 127.0
         else:
             return("wrong input", val)
-
-
-MasterVolume = Control(20, 0, 1, 0.5)
-MasterTempo = Control(0, 80, 180, 120)
