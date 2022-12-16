@@ -1,5 +1,5 @@
 from music21.dynamics import Dynamic
-from FoxDot import PRange, Pattern
+from FoxDot import PRange, Pattern, PGroup
 from section import Section
 from playable import PlayableGroup, Control
 from now_playing import NowPlaying
@@ -10,7 +10,27 @@ from now_playing import NowPlaying
 # override pattern_keys() and return affected keys
 # and override the "execute()" method
 
-class SectionOperation:
+class Operation:
+
+    def __init__(self, keyword):
+        self.keyword = keyword
+
+    def apply_to(self, playable):
+        if isinstance(playable, PlayableGroup):
+            # apply to each playable in group
+            for p in playable: self.copy().apply_to(p)
+            return True
+        elif isinstance(playable, Control):
+            # operations can't be applied to control, so we look for sections
+            if playable._parent is not None:
+                self.apply_to(playable._parent)
+                return True
+        return False
+
+    def execute():
+        print("override me")
+
+class SectionOperation(Operation):
 
     def __init__(self, keyword):
         self.keyword = keyword
@@ -20,27 +40,20 @@ class SectionOperation:
         return None
 
     def apply_to(self, playable):
-        if isinstance(playable, PlayableGroup):
-            # apply to each playable in group
-            for p in playable: self.copy().apply_to(p)
+
+        if super().apply_to(playable):
             return
-        elif isinstance(playable, Control):
-            # operations can't be applied to control, so we look for sections
-            if playable._parent is not None:
-                self.apply_to(playable._parent)
+        self.section = playable
+        if self.keyword in self.section.operations:
+            return
+        # section needs to know its operations so we can remove them
+        self.section.operations[self.keyword] = self
+        # store the initial values so that we can
+        vals = [self.section[key].copy() for key in self.pattern_keys()]
+        self.initial_vals = dict(zip(self.pattern_keys(), vals))
 
-        else: # Section
-            self.section = playable
-            if self.keyword in self.section.operations:
-                return
-            # section needs to know its operations so we can remove them
-            self.section.operations[self.keyword] = self
-            # store the initial values so that we can
-            vals = [self.section[key].copy() for key in self.pattern_keys()]
-            self.initial_vals = dict(zip(self.pattern_keys(), vals))
-
-            self.execute()
-            NowPlaying.update()
+        self.execute()
+        NowPlaying.update()
 
     def copy(self):
         return self.__class__(self.keyword)
@@ -159,3 +172,35 @@ class Diminuendo(Crescendo):
 
     def amp_pattern(self):
         return super().amp_pattern().reverse()
+
+
+class SampleOperation(Operation):
+
+    def __init__(self, keyword):
+        super().__init__(keyword)
+
+    def apply_to(self, sample):
+        print("applying operation ", self.keyword)
+        self.sample = sample
+        if super().apply_to(sample):
+            print("early return")
+            return
+        self.execute()
+        NowPlaying.update()
+
+
+class Multiply(SampleOperation):
+
+    def __init__(self, kw, value):
+        super().__init__(kw)
+        self.value = value
+
+    def execute(self):
+        print("executing sample operation ", self.sample, self.value)
+        if isinstance(self.sample.bufnum, Pattern):
+            self.sample.bufnum = PGroup([self.sample.bufnum[i] for i in range(0, self.value)] )
+        else:
+            self.sample.bufnum = PGroup([self.sample.bufnum]*self.value)
+
+    def copy(self):
+        return self.__class__(self.keyword, self.value)

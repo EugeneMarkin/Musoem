@@ -1,10 +1,10 @@
 #sys.path.append("/Users/eugenemarkin/Projects/scoredot")
 from command_map import CommandMap
-from score import MidiScore
+from score import FileScore
 from operations import ReversePitch, Retrograde, Transpose
 from control_operations import crescendo, reverb
 
-score = MidiScore("/Users/eugenemarkin/Music/Midi/Mary_score",bpm = 120)
+score = FileScore("/Users/eugenemarkin/Music/Midi/Mary_score",bpm = 120)
 mary_map = CommandMap(score)
 mary_map.add_control([crescendo("rise", fromval = 'pp', toval = 'fff', dur = 5),
                       reverb("space",0.1, 1, 5), reverb("land", 1, 0.1, 2)])

@@ -1,7 +1,5 @@
 import tkinter as tk
-from command_map import CommandMap
-from mary_lamb import mary_map
-from drums import drum_map
+from survival_kit import survival_kit_map
 from now_playing import NowPlaying
 from command_parser import TextParser
 from functools import reduce
@@ -43,7 +41,7 @@ class Gui(tk.Tk):
         self.frame = tk.Frame(self)
         self.frame.configure(padx=0, pady=0, relief = "flat", bd=1)
         self.frame.pack(fill = "both", expand = True, ipadx=0, ipady=0)
-        self.command_parser = TextParser(drum_map)
+        self.command_parser = TextParser(survival_kit_map)
         self.input = tk.Text(self.frame, width = 50, height = 1)
         self.output = tk.Text(self.frame, width = 50, height = 20)
 

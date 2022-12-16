@@ -53,7 +53,18 @@ l = (l + 5) * (5/10)
 
 print(l)
 
+instr = FileSynthDef("vsample")
 
+instr.add()
+
+p1 >> instr(buf = 21)
+
+print(max(P[1,2,3]))
+
+w = Server.bufferRead("/Users/eugenemarkin/Music/survival_kit/vsample/pills c#3 [2022-11-23 234956].aif", 2)
+print(w)
+
+print(PxRand(-10, 10)[0]/10)
 
 
 print([i for i in range(0,10)])

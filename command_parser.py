@@ -1,7 +1,7 @@
 import random
 from section import Section
 from playable import Playable, PlayableGroup
-from operations import SectionOperation, SectionOperationGroup
+from operations import Operation, SectionOperationGroup
 from now_playing import NowPlaying
 import re
 import functools
@@ -29,7 +29,7 @@ class CommandStatement:
                 self.top_playable * -1
             self.top_playable = self.top_playable.root
             self.top_playable()
-        elif isinstance(self.top_playable, SectionOperation):
+        elif isinstance(self.top_playable, Operation):
             list(map(lambda p: self.top_playable.copy().apply_to(p), NowPlaying.all()))
 
 
@@ -60,19 +60,20 @@ class SectionCommand(Command):
 
     @property
     def result(self):
-        return self._map.score[self.keyword].copy()
+        return self._map.get_section(self.keyword).copy()
 
 class OperationCommand(Command):
 
     @property
     def result(self):
-        return self._map.operations[self.keyword].copy()
+        print("there is my operation", self._map.get_operation(self.keyword))
+        return self._map.get_operation(self.keyword).copy()
 
 class ControlCommand(Command):
 
     @property
     def result(self):
-        return self._map.control[self.keyword].copy()
+        return self._map.get_control(self.keyword).copy()
 
 
 class SequenceCommand(Command):
@@ -104,13 +105,13 @@ class SequenceCommand(Command):
     def _reduce_pair(self, a, b):
         if isinstance(a, Playable)  and isinstance(b, Playable):
             return (a >> b)
-        elif isinstance(a,Playable) and isinstance(b, SectionOperation) :
+        elif isinstance(a,Playable) and isinstance(b, Operation) :
             b.apply_to(a)
             return a
-        elif isinstance(a, SectionOperation) and isinstance(b, Playable):
+        elif isinstance(a, Operation) and isinstance(b, Playable):
             a.apply_to(b)
             return b
-        elif isinstance(a, SectionOperation) and isinstance(b, SectionOperation):
+        elif isinstance(a, Operation) and isinstance(b, Operation):
             return a + b
 
 
@@ -159,13 +160,13 @@ class AndCommand(CombinationCommand):
     def reduce(self, a, b):
         if isinstance(a, Playable)  and isinstance(b, Playable):
             return a + b
-        elif isinstance(a, Playable) and isinstance(b, SectionOperation):
+        elif isinstance(a, Playable) and isinstance(b, Operation):
             b.apply_to(a)
             return a
-        elif isinstance(a, SectionOperation) and isinstance(b, Playable):
+        elif isinstance(a, Operation) and isinstance(b, Playable):
             a.apply_to(b)
             return b
-        elif isinstance(a, SectionOperation) and isinstance(b, SectionOperation):
+        elif isinstance(a, Operation) and isinstance(b, Operation):
             return SectionOperationGroup([a,b])
 
     def __str__(self):

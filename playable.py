@@ -161,6 +161,7 @@ class Playable(Entity):
                 return None
         return sum(durs)
 
+
 class PlayableGroup(Playable):
 
     def __init__(self, playables):

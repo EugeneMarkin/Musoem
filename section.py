@@ -121,6 +121,9 @@ class Section(Playable):
         if key in self.patterns:
             self.__setattr__(key, value)
 
+    def __str__(self):
+        return "Section " + self.keyword
+
     @property
     def description(self):
         return str(self.patterns)
