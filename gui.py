@@ -51,8 +51,8 @@ class Gui(tk.Tk):
         self.input.pack(side = tk.TOP, fill = "both",  expand = True, ipady = 0)
         self.output.pack(side = tk.BOTTOM, fill = "both", expand = True, ipady = 0)
         font = ("Helvetica", 20, "normal")
-        self.input.configure(font = font, background = "black", foreground = "white", bd=1, selectborderwidth = 0, insertbackground = "white")
-        self.output.configure(font = font,  background = "black", foreground = "white", bd=1, selectborderwidth = 0, insertbackground = "white")
+        self.input.configure(font = ("Helvetica", 28, "normal"), background = "black", foreground = "white", bd=1, selectborderwidth = 0, insertbackground = "white")
+        self.output.configure(font = ("Helvetica", 20, "normal"),  background = "black", foreground = "white", bd=1, selectborderwidth = 0, insertbackground = "white")
 
 
 

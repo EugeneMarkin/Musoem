@@ -16,6 +16,7 @@ from measure import Measure
 class Part:
 
     def __init__(self, psp: PartStaffParser):
+        self.text_marks = psp.text_marks
         self.instrument = psp.instrument
         self.clef = psp.clef
         self._voices = {}

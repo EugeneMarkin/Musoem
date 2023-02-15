@@ -42,4 +42,4 @@ without interactive notation? text as notation
 
 assign verbal instructions to the keywords ?
 
-don't need to necessarily apply heavy transformations on notated sections. Could just change the dynamics and stuff
+don't need to necessarily apply heavy transformations on notated sections. Could just change the dynamics and stuff 

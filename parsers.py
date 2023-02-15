@@ -7,6 +7,8 @@ from music21.chord import Chord
 from music21.note import Note, Rest, GeneralNote, Unpitched
 from music21.stream.iterator import StreamIterator
 from music21.tempo import MetronomeMark
+from music21.expressions import TextExpression
+from text_mark import TextMark
 from time_signature import TimeSignature
 from music21.meter.base import TimeSignature as M21TS
 from music21.converter import parse as parse_midi
@@ -54,6 +56,7 @@ class PartStaffParser:
         self.clef = self._get_clef_from_partStaff(partStaff)
         self.id = partStaff.id
         self.measures = []
+        self.text_marks = []
         measure_index = 0
         for obj in partStaff.iter:
             ts = None
@@ -78,6 +81,7 @@ class PartStaffParser:
                             prev_bpm = [prev_bpm[-1]]
                     mp = MeasureParser(obj, prev_ts, prev_bpm, partStaff)
                 self.measures.append(mp)
+                self.text_marks.extend(mp.text_marks)
                 measure_index+=1
 
     def _get_clef_from_partStaff(self, partStaff):
@@ -95,6 +99,7 @@ class MeasureParser:
         self._parse_time_signature(measure, prev_ts)
         self.voices = {}
         self.bpm = prev_bpm.copy()
+        self.text_marks = []
         #print("parse measure", self.id)
 
         if measure.hasVoices():
@@ -102,10 +107,12 @@ class MeasureParser:
                 vp = VoiceParser(voice, prev_bpm, part, measure)
                 prev_bpm = vp.bpm
                 self.voices[voice.id] = vp
+                self.text_marks.extend(vp.text_marks)
         else:
             vp = VoiceParser(measure, prev_bpm, part, measure)
             self.bpm = vp.bpm
             self.voices["-1"] = vp
+            self.text_marks.extend(vp.text_marks)
         # all voices in the measure should have the same bpm anyway
 
     def _parse_time_signature(self, measure, prev_ts):
@@ -125,6 +132,7 @@ class VoiceParser:
         self.bpm = prev_bpm.copy()
         self.part = part
         self.measure = measure
+        self.text_marks = []
         self.amp = [] # TODO: implement dynamics
         for element in stream.iter:
             self._parse_element(element)
@@ -136,7 +144,8 @@ class VoiceParser:
             and not type(element) == Rest
             and not type(element) == Chord
             and not type(element) == Unpitched
-            and not type(element) == MetronomeMark):
+            and not type(element) == MetronomeMark
+            and not type(element) == TextExpression):
             #    print("This is not implemented: ", type(element))
                 return
 
@@ -150,6 +159,8 @@ class VoiceParser:
             self._parse_unpitched(element)
         elif isinstance(element, MetronomeMark):
             self._parse_metro_mark(element)
+        elif isinstance(element, TextExpression):
+            self._parse_text(element)
 
     def _parse_note(self, note):
         degree = self._get_scale_degree(note.pitch)
@@ -220,6 +231,11 @@ class VoiceParser:
     def _parse_metro_mark(self, mm):
         #print("parse metro mark", mm)
         self.bpm.append(self._get_bpm_from_metronome_mark(mm))
+
+    def _parse_text(self, expression):
+        text = expression.content
+        m_num = expression.measureNumber
+        self.text_marks.append(TextMark(text, m_num))
 
 
     # if has a tie of type 'start' we need to find the end

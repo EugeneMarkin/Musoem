@@ -1,8 +1,8 @@
 #from score import Score
 #from stream_parser import ScoreParser
-from music21.stream.base import Score as M21Score
-from music21.stream.base import Measure as M21Measure
-from music21.stream.base import Voice as M21Voice
+from music21.stream import Score as M21Score
+from music21.stream import Measure as M21Measure
+from music21.stream import Voice as M21Voice
 from music21.chord import Chord
 from music21 import converter
 from score import Score
@@ -110,23 +110,13 @@ def test5():
     for m in measures:
         print(m.description)
 
-test5()
+def test6():
+    m21_score = parse_musicxml_file("~/Documents/test.musicxml")
+    score = Score(m21_score)
+    sections = score.sections
+    print("sections", sections)
+    for s in sections:
+        print(s.keyword, " ", s)
 
-p = P[1, 2, 3]
 
-p1 >> MidiOut(channel = 1, degree = p)
-
-
-
-g = p.copy()
-
-p.extend([4])
-
-p = p*2
-
-print(p)
-
-print(max(len(p), len(g)))
-
-for w in p:
-    print(w)
+test6()

@@ -5,10 +5,7 @@ class Entity(object):
 
     def __init__(self, keyword = "None"):
         self.keyword = keyword
+        self.font_style = "normal"
 
     def display(self):
         return [self]
-
-    @property
-    def display_style(self):
-        print("override me")

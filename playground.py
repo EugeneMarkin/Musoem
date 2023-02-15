@@ -64,7 +64,7 @@ print(max(P[1,2,3]))
 w = Server.bufferRead("/Users/eugenemarkin/Music/survival_kit/vsample/pills c#3 [2022-11-23 234956].aif", 2)
 print(w)
 
-print(PxRand(-10, 10)[0]/10)
+print(PxRand(-1, 1)[0]/10)
 
 
 print([i for i in range(0,10)])

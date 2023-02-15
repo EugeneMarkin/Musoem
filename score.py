@@ -1,6 +1,6 @@
 from music21.stream import Score as M21Score
 from music21.stream import Measure as M21Measure
-from music21.stream.base import PartStaff
+from music21.stream import PartStaff
 from music21.instrument import Instrument
 from measure import Measure
 from time_signature import TimeSignature
@@ -52,7 +52,17 @@ class Score:
         print(section.description)
         return section
 
-
+    @property
+    def sections(self):
+        res = []
+        for key, part in self._parts.items():
+            for tm in part.text_marks:
+                m_start = tm.measure_num
+                m_end = m_start + tm.length - 1
+                section = self.section(m_start, m_end, key)
+                section.keyword = tm.text
+                res.append(section)
+        return res
 
     def _get_instrument_for_key(self, part_key, voice):
         if self._instr_map is None:
@@ -109,7 +119,8 @@ class FileScore(Score):
                 section = self.midi_section(path + "/" + file, instrument, kw)
                 result[kw] = section
             elif os.path.isdir(path + "/" + file):
-                midi_set = self.load_midi_files(os.listdir(path + "/" + file), instrument, path + "/" + file).values()
+                files = sorted(os.listdir(path + "/" + file))
+                midi_set = self.load_midi_files(files, instrument, path + "/" + file).values()
                 midi_set = SectionList(list(midi_set))
                 for s in midi_set: s.keyword = kw
                 result[kw] = midi_set
@@ -134,14 +145,13 @@ class FileScore(Score):
             # if the instrument directory contains subdirectories
             # we interpret it as a set of files that should be assigned to the same keyword
             elif os.path.isdir(path + "/" + file):
-                    sample_set = self.load_audio_files(os.listdir(path + "/" + file), instrument, path + "/" + file).values()
+                    files = sorted(os.listdir(path + "/" + file))
+                    sample_set = self.load_audio_files(files, instrument, path + "/" + file).values()
                     sample_set = list(sample_set)
-                    print("sample set is", sample_set)
                     if len(sample_set) > 1:
                         buffers = list(map(lambda x: x.bufnum, sample_set))
                         print(buffers)
                         sample_set = SampleList(kw, instrument, buffers)
-                        print("sample set", sample_set)
                         for s in sample_set: s.keyword = kw
                         result[kw] = sample_set
                     else:

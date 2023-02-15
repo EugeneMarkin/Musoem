@@ -6,6 +6,8 @@ from operations import Multiply
 path = "/Users/eugenemarkin/Music/survival_kit"
 sk = FileScore(path, None)
 
+sk["survival"].release = 10
+sk["survival"].pan = 1
 # saw
 saw = sk["saw"]
 saw.dur = 16
@@ -15,14 +17,19 @@ saw.lfodepth = Pattern([0.2, 0.3])
 
 # fruit
 fruit = sk["fruit"]
-fruit.dur = Pattern([16, 8])
+fruit.dur = Pattern([24, 16])
+fruit.freeze = Pattern([1.11, 0.13, 0.5])
+fruit.release = 4
 
 # pills
 pills = sk["pills"]
-pills.dur = Pattern([0.5,0.333,1, 10 ,1,12, 2])
+pills.dur = Pattern([0.5,0.333,4 ,5, 6])
 pills.freeze = 100
 pills.lfohz = Pattern([0.5, 1, 5,0.2, 3])
 pills.lfodepth = Pattern([0.2, 0.7, 0.5])
+pills.release = 5
+
+sk["anything"].dur = 8
 
 
 # good
@@ -73,6 +80,52 @@ last.teeth = 8
 sk["your"].rate = Pattern([1, -1, 0.3, -0.3])
 sk["breath"].freeze = 100
 sk["wish"].freeze = 100
+
+one = sk["one"]
+one.display_style = "italic"
+one.freeze = 100
+one.attack = 4
+one.release = 6
+one.dur = 2
+one.lfodepth = 0
+one.pan = 1
+one.ordered = True
+
+sk["sharp"].freeze = 0.5
+
+sk["sharp"].release = 12
+
+sk["hundred"].freeze = 0.6
+sk["hundred"].release = 12
+
+sk["hard"].freeze = 0.8
+sk["hard"].release = 12
+
+sk["wasted"].freeze = 0.4
+sk["wasted"].release = 12
+
+sk["knife"].release = 8
+sk["knife"].dur = Pattern([2, 4, 6])
+
+sk["bible"].release = 8
+sk["bible"].attack = 3
+sk["bible"].dur = Pattern([3,4,5])
+
+
+sk["dollars"].dur = 3
+sk["dollars"].release = 2
+sk["rubles"].release = 4
+sk["stone"].release = 4
+sk["truth"].release = 4
+sk["youth"].release = 4
+sk["bright"].release = 4
+sk["flash"].release = 4
+sk["blast"].release = 4
+sk["wave"].release = 4
+sk["father"].release = 4
+sk["son"].release = 4
+sk["holy"].release = 4
+sk["ghost"].release = 4
 
 operations = {"three" : Multiply("three", 3)}
 

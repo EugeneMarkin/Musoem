@@ -24,7 +24,7 @@ class Measure:
                  amp,
                  bpm,
                  ts):
-        self.index: int = index # the original place of the measure in score (for reference)
+        self.index = index # the original place of the measure in score (for reference)
         self.ts = ts
         self.bpm = Pattern(bpm)
         self._parse_lists_into_patterns(pitch, octave, duration, sustain, amp, bpm)

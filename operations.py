@@ -14,6 +14,7 @@ class Operation:
 
     def __init__(self, keyword):
         self.keyword = keyword
+        self.display_style = "italic"
 
     def apply_to(self, playable):
         if isinstance(playable, PlayableGroup):
@@ -199,6 +200,7 @@ class Multiply(SampleOperation):
         print("executing sample operation ", self.sample, self.value)
         if isinstance(self.sample.bufnum, Pattern):
             self.sample.bufnum = PGroup([self.sample.bufnum[i] for i in range(0, self.value)] )
+            self.sample.pan = PGroup()
         else:
             self.sample.bufnum = PGroup([self.sample.bufnum]*self.value)
 
