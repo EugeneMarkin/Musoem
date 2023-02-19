@@ -1,7 +1,8 @@
 from FoxDot import Pattern, Clock
-from now_playing import NowPlaying
 from functools import reduce
-from entity import Entity
+
+from ..player.now_playing import NowPlaying
+from .entity import Entity
 
 # A base class for Playable objects:
 # Section, SectionGroup, ControlOperation

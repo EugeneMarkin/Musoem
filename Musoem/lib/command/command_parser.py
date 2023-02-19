@@ -1,11 +1,11 @@
 import random
-from section import Section
-from playable import Playable, PlayableGroup
-from operations import Operation, SectionOperationGroup
-from now_playing import NowPlaying
 import re
 import functools
 
+from ..playables.section import Section
+from ..playables.playable import Playable, PlayableGroup
+from ..operations.operations import Operation, SectionOperationGroup
+from ..player.now_playing import NowPlaying
 
 class CommandStatement:
 

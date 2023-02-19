@@ -1,5 +1,5 @@
 from music21.dynamics import Dynamic
-from control import MidiControl
+from ..playables.control import MidiControl
 
 def crescendo(keyword, fromval, toval, dur):
     from_v = Dynamic(fromval).volumeScalar

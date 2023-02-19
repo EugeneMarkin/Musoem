@@ -1,7 +1,8 @@
-from playable import Playable
-from section_player import SectionPlayer
-from FoxDot import FileSynthDef, Buffer, PxRand, Pattern, PGroup, Clock, Player
 import random
+from FoxDot import FileSynthDef, Buffer, PxRand, Pattern, PGroup, Clock, Player
+
+from .playable import Playable
+from ..player.section_player import SectionPlayer
 
 Clock.bpm = 60
 

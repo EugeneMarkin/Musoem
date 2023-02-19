@@ -113,7 +113,7 @@ def test5():
 def test6():
     m21_score = parse_musicxml_file("~/Documents/test.musicxml")
     score = Score(m21_score)
-    sections = score.sections
+    sections = score.all_sections
     print("sections", sections)
     for s in sections:
         print(s.keyword, " ", s)

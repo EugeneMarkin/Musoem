@@ -1,7 +1,8 @@
-from command_map import CommandMap
-from score import FileScore
 from FoxDot import Pattern
-from operations import Multiply
+from lib.command.command_map import CommandMap
+from lib.score.score import FileScore
+
+from lib.operations.operations import Multiply
 
 path = "/Users/eugenemarkin/Music/survival_kit"
 sk = FileScore(path, None)

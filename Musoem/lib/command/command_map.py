@@ -1,7 +1,7 @@
-from section import SectionStub
-from operations import *
-from score import Score, FileScore, SectionList
-from control_operations import crescendo
+from ..playables.section import SectionStub
+from ..operations.operations import *
+from ..score.score import Score, FileScore, SectionList
+from ..operations.control_operations import crescendo
 
 
 class CommandMap:

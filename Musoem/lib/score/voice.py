@@ -6,8 +6,8 @@
 # Unless the piece is polyphonic and 'voices' feature of music engraving software
 # is used, a voice will normally correspond to a separate staff of an instrument part,
 # e.g. piano treble or piano bass or violin
-from measure import Measure
-from section import Section
+from .measure import Measure
+from ..playables.section import Section
 
 class Voice:
 

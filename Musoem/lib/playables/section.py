@@ -1,7 +1,7 @@
-from measure import Measure
+from ..score.measure import Measure
 from FoxDot import Pattern, Player, FileSynthDef, Env, Scale, MidiOut, Clock, rest
-from section_player import SectionPlayer
-from playable import Playable
+from ..player.section_player import SectionPlayer
+from .playable import Playable
 
 # A Section is a FoxDot-friendly class that represents a section of music for
 # a signle part and single voice.

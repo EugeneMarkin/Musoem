@@ -1,16 +1,21 @@
+import os
 from music21.stream import Score as M21Score
 from music21.stream import Measure as M21Measure
 from music21.stream import PartStaff
 from music21.instrument import Instrument
-from measure import Measure
-from time_signature import TimeSignature
-from FoxDot import Pattern, Server
-from section import Section
-from sample import Sample, SampleList
 from music21.tempo import MetronomeMark
-from parsers import ScoreParser, MidiParser
-from part import Part
-import os
+from music21 import converter
+from FoxDot import Pattern, Server
+
+from .measure import Measure
+from .time_signature import TimeSignature
+
+from ..playables.section import Section
+from ..playables.sample import Sample, SampleList
+
+from ..parsers.parsers import ScoreParser, MidiParser
+from .part import Part
+
 
 # A class representing an entire score coming from a single MusicXML file
 # Score consists of parts - single staff part in the MusicXML score
@@ -53,7 +58,7 @@ class Score:
         return section
 
     @property
-    def sections(self):
+    def all_sections(self):
         res = []
         for key, part in self._parts.items():
             for tm in part.text_marks:
@@ -87,6 +92,13 @@ class Score:
                 key = part.id + " voice: " + str(voice.id)
                 res[key] = voice.all
         return res
+
+
+class MusicXMLScore(Score):
+
+    def __init__(self, file_path):
+        m21score = converter.parse(fp, format = "musicxml")
+        super().__init__(m21score)
 
 
 # TODO: make proper file heierarchy

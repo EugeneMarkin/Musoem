@@ -1,9 +1,10 @@
 import tkinter as tk
-from survival_kit import survival_kit_map
-from now_playing import NowPlaying
-from command_parser import TextParser
 from functools import reduce
 from uuid import uuid4
+
+from music.survival_kit import survival_kit_map
+from lib.player.now_playing import NowPlaying
+from lib.command.command_parser import TextParser
 
 
 class Tag:

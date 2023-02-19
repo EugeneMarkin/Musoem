@@ -1,8 +1,9 @@
 from music21.dynamics import Dynamic
 from FoxDot import PRange, Pattern, PGroup
-from section import Section
-from playable import PlayableGroup, Control
-from now_playing import NowPlaying
+
+from ..playables.section import Section
+from ..playables.playable import PlayableGroup, Control
+from ..player.now_playing import NowPlaying
 
 # A class for music transformation
 

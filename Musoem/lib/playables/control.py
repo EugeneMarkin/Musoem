@@ -1,7 +1,7 @@
-from FoxDot import MidiOut
-from section_player import SectionPlayer
-from FoxDot import Clock, TimeVar, Pattern, Scale
-from playable import Control
+from FoxDot import MidiOut, Clock, TimeVar, Pattern, Scale
+
+from ..player.section_player import SectionPlayer
+from .playable import Control
 
 class MidiControl(Control):
 

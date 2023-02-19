@@ -8,10 +8,12 @@ from music21.note import Note, Rest, GeneralNote, Unpitched
 from music21.stream.iterator import StreamIterator
 from music21.tempo import MetronomeMark
 from music21.expressions import TextExpression
-from text_mark import TextMark
-from time_signature import TimeSignature
 from music21.meter.base import TimeSignature as M21TS
 from music21.converter import parse as parse_midi
+
+from ..score.text_mark import TextMark
+from ..score.time_signature import TimeSignature
+
 
 # This class parses the music21 tree of a score
 
