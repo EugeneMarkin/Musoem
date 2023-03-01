@@ -1,10 +1,13 @@
 import tkinter as tk
+from tkinter import filedialog as fd
 from functools import reduce
 from uuid import uuid4
+import os
 
 from music.survival_kit import survival_kit_map
 from lib.player.now_playing import NowPlaying
 from lib.command.command_parser import TextParser
+from lib.score.score_dir import ScoreDir
 
 
 class Tag:
@@ -32,6 +35,37 @@ class Tag:
     def __str__(self):
         return "id " + self.id + "kw " + self.playable.keyword
 
+class Menu:
+
+    def __init__(self, app):
+        # TODO: add some kind of a default demo project
+        # that will open.
+        # TODO: add a preferences file serialization to open the most
+        # recent project
+        self.command_map = None
+
+        self.menubar = tk.Menu(app)
+        filemenu = tk.Menu(self.menubar, tearoff = 0)
+        filemenu.add_command(label="Open", command=self.open_file)
+        filemenu.add_command(label="Reload", command=self.reload)
+        self.menubar.add_cascade(label="File", menu = filemenu)
+        app.config(menu = self.menubar)
+        app.winfo_toplevel().title("Musoem")
+
+    # TODO: add hot keys to these both functions
+    def open_file(self):
+        print("open file")
+        self.dir_path = fd.askdirectory(initialdir = os.path.expanduser('~'))
+        self._load(self.dir_path)
+
+    def reload(self):
+        print("reload")
+        NowPlaying.reset()
+        self._load(self.dir_path)
+
+    def _load(self, path):
+        command_map = ScoreDir(path).load()
+        app.command_parser = TextParser(command_map)
 
 class Gui(tk.Tk):
     def __init__(self):
@@ -42,7 +76,6 @@ class Gui(tk.Tk):
         self.frame = tk.Frame(self)
         self.frame.configure(padx=0, pady=0, relief = "flat", bd=1)
         self.frame.pack(fill = "both", expand = True, ipadx=0, ipady=0)
-        self.command_parser = TextParser(survival_kit_map)
         self.input = tk.Text(self.frame, width = 50, height = 1)
         self.output = tk.Text(self.frame, width = 50, height = 20)
 
@@ -55,6 +88,7 @@ class Gui(tk.Tk):
         self.input.configure(font = ("Helvetica", 28, "normal"), background = "black", foreground = "white", bd=1, selectborderwidth = 0, insertbackground = "white")
         self.output.configure(font = ("Helvetica", 20, "normal"),  background = "black", foreground = "white", bd=1, selectborderwidth = 0, insertbackground = "white")
 
+        self.menu = Menu(self)
 
 
     def key_press(self, event):

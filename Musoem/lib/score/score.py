@@ -12,6 +12,7 @@ from .time_signature import TimeSignature
 
 from ..playables.section import Section
 from ..playables.sample import Sample, SampleList
+from ..playables.section_list import SectionList
 
 from ..parsers.parsers import ScoreParser, MidiParser
 from .part import Part
@@ -21,15 +22,23 @@ from .part import Part
 # Score consists of parts - single staff part in the MusicXML score
 # Part can have single or multiple voices (as in music engraving software)
 
+
 class Score:
+
+    @property
+    def playables(self):
+        # Override me
+        return None
+
+class MusicXMLScore(Score):
 
     # TODO: add a class method constructor to create Score from a file path
     # Parse from music21 Score object
-    def __init__(self, sc: M21Score, instr_map = None):
+    def __init__(self, path):
         # lines notated on different staves are parsed as separate parts
+        m21score = converter.parse(path, format = "musicxml")
         self._parts = {}
-        self._instr_map = instr_map
-        score_parser = ScoreParser(sc)
+        score_parser = ScoreParser(m21score)
         for part_id in score_parser.parts:
             part_staff_parser = score_parser.parts[part_id]
             part = Part(part_staff_parser)
@@ -52,13 +61,13 @@ class Score:
             else:
                 voice_part = part.voices[voice]
 
-        instrument_key = self._get_instrument_for_key(part_key, voice)
+        instrument_key = part.instrument
         section = voice_part.section(from_measure, to_measure, instrument_key)
         print(section.description)
         return section
 
     @property
-    def all_sections(self):
+    def playables(self):
         res = []
         for key, part in self._parts.items():
             for tm in part.text_marks:
@@ -68,19 +77,6 @@ class Score:
                 section.keyword = tm.text
                 res.append(section)
         return res
-
-    def _get_instrument_for_key(self, part_key, voice):
-        if self._instr_map is None:
-            return None
-        if part_key in self._instr_map:
-            instr_data = self._instr_map[part_key]
-            if isinstance(instr_data, dict):
-                if voice not in instr_data:
-                    return None
-                else:
-                    return instr_data[voice]
-            elif isinstance(instr_data, str):
-                return instr_data
 
     # Returns a dictionary where keys are individual parts or part voices
     # and values are Section objects containing ALL measures of the score
@@ -94,20 +90,14 @@ class Score:
         return res
 
 
-class MusicXMLScore(Score):
 
-    def __init__(self, file_path):
-        m21score = converter.parse(fp, format = "musicxml")
-        super().__init__(m21score)
-
-
-# TODO: make proper file heierarchy
+# This class assembles a score out of midi and/or audio files contained in a dir
 class FileScore(Score):
 
-    def __init__(self, folder_path, bpm):
+    def __init__(self, folder_path, bpm = 120):
         self.bpm = bpm
         # TODO: rename this to playables
-        self.sections = {}
+        self._playables = {}
         self.buf_num_generator = BufNumGenerator()
         dir = os.listdir(folder_path)
         for instrument in dir:
@@ -119,9 +109,9 @@ class FileScore(Score):
             instrument_path = folder_path + "/" + instrument
             instrument_dir = os.listdir(instrument_path)
             if "midi" in instrument:
-                self.sections.update(self.load_midi_files(instrument_dir, instrument, instrument_path))
+                self._playables.update(self.load_midi_files(instrument_dir, instrument, instrument_path))
             elif "sample" in instrument:
-                self.sections.update(self.load_audio_files(instrument_dir, instrument, instrument_path))
+                self._playables.update(self.load_audio_files(instrument_dir, instrument, instrument_path))
 
     def load_midi_files(self, files, instrument, path):
         result = {}
@@ -133,7 +123,7 @@ class FileScore(Score):
             elif os.path.isdir(path + "/" + file):
                 files = sorted(os.listdir(path + "/" + file))
                 midi_set = self.load_midi_files(files, instrument, path + "/" + file).values()
-                midi_set = SectionList(list(midi_set))
+                midi_set = SectionList(list(midi_set), kw)
                 for s in midi_set: s.keyword = kw
                 result[kw] = midi_set
         return result
@@ -171,7 +161,12 @@ class FileScore(Score):
         return result
 
     def __getitem__(self, key):
-        return self.sections[key]
+        return self._playables[key]
+
+    @property
+    def playables(self):
+        return self._playables.values()
+
 
 class BufNumGenerator:
 
@@ -182,22 +177,3 @@ class BufNumGenerator:
     def next(self):
         self.bufnum += 1
         return self.bufnum
-
-# TODO: move this class somewhere else
-class SectionList:
-
-    def __init__(self, list):
-        self.list = list
-        self.index = 0
-
-    @property
-    def next(self):
-        res = self.list[self.index]
-        if self.index < len(self.list) - 1:
-            self.index += 1
-        else:
-            self.index = 0
-        return res
-
-    def __iter__(self):
-        return iter(self.list)

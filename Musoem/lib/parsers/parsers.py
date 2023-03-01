@@ -1,6 +1,6 @@
 from music21.stream import Stream
 from music21.stream.base import Measure as M21Measure
-from music21.stream.base import PartStaff
+from music21.stream.base import PartStaff, Part
 from music21.stream.base import Score
 from music21.scale import ChromaticScale
 from music21.chord import Chord
@@ -45,6 +45,7 @@ class ScoreParser:
         self.parts = {}
         prev_part = None
         for partStaff in score.parts:
+            print("part staff", partStaff)
             part_staff_parser = PartStaffParser(partStaff, prev_part)
             prev_part = part_staff_parser
             part_id = part_staff_parser.id
@@ -52,15 +53,15 @@ class ScoreParser:
 
 class PartStaffParser:
 
-    def __init__(self, partStaff: PartStaff, prev_part):
+    def __init__(self, partStaff: Part, prev_part):
         #print("parse part", partStaff.id)
-        self.instrument = partStaff.getInstrument(returnDefault=False).instrumentName
+        self.instrument = partStaff.partName.lower()
         self.clef = self._get_clef_from_partStaff(partStaff)
         self.id = partStaff.id
         self.measures = []
         self.text_marks = []
         measure_index = 0
-        for obj in partStaff.iter:
+        for obj in partStaff:
             ts = None
             if type(obj) == M21TS:
                 # TODO: refactor the time signature stuff
@@ -136,7 +137,7 @@ class VoiceParser:
         self.measure = measure
         self.text_marks = []
         self.amp = [] # TODO: implement dynamics
-        for element in stream.iter:
+        for element in stream:
             self._parse_element(element)
         for el in self.pitch: self.amp.append(0.8)
 

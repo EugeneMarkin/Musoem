@@ -25,7 +25,7 @@ class Section(Playable):
         self.ts = Pattern([])
 
         self._measures = measures
-        self._instrument_key = instrument_key
+        self.instrument_key = instrument_key
 
         for mes in measures:
             self.degree.extend(mes.degree)
@@ -73,7 +73,7 @@ class Section(Playable):
         return self
 
     def copy(self):
-        return self.__class__(self._measures, instrument_key = self._instrument_key, keyword = self.keyword)
+        return self.__class__(self._measures, instrument_key = self.instrument_key, keyword = self.keyword)
 
     @property
     def total_dur(self):

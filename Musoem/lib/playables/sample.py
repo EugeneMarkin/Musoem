@@ -83,7 +83,6 @@ class Sample(Playable):
 class SampleList(Sample):
 
 
-
     def __init__(self, keyword, instrument_key, bufnums):
 
         super().__init__(keyword, instrument_key, bufnums[0])

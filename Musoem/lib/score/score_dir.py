@@ -1,27 +1,41 @@
 import os
-from score import MusicXMLScore
+import re
+from .score import MusicXMLScore, FileScore
+from .config import Config
+from ..command.command_map import CommandMap
 
+# This class represents a file directory containing any type of score
+# It is used by the File->Open dialog to load up music data into Musoem
 class ScoreDir:
     def __init__(self, path):
-        dir = os.listdir(path)
+        self.path = path
+
+    # loads the score directory and parses it into playables and
+    # config files
+    def load(self) -> CommandMap:
+        playables = []
+        configs = []
+        dir = os.listdir(self.path)
         # list all files in the directory
         for item in dir:
             # skip system files
             if item[0] == ".":
                 continue
-            if not os.path.isdir(folder_path + "/" + item):
-                # there is file in the dir that might be a score or config
-                if ".musicxml" in file:
+            # a file in the dir that might be a score or config
+            if not os.path.isdir(self.path + "/" + item):
+                if ".musicxml" in item:
                     # the file is a score
-                    self.score = MusicXMLScore(path + "/" + item)
+                    playables += MusicXMLScore(self.path + "/" + item).playables
                     continue
-                elif ".json" in item:
+                elif ".py" in item:
                     # implement the json parsing of config
+                    conf = Config(self.path + "/" + item)
+                    configs.append(conf)
                     continue
             # all directories at this level should be instrument dirs
-            instrument_path = folder_path + "/" + item
-            instrument_dir = os.listdir(instrument_path)
-            if "sample" in instrument:
-                self.sections.update(self.load_audio_files(instrument_dir, instrument, instrument_path))
-            else "midi" in instrument:
-                self.sections.update(self.load_midi_files(instrument_dir, instrument, instrument_path))
+            project_name = os.path.basename(self.path)
+            bpm = int(re.findall(r'bpm=([0-9]+)', project_name)[0])
+            playables += FileScore(self.path, bpm).playables
+
+        cm = CommandMap(playables, configs)
+        return cm

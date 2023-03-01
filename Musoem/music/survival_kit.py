@@ -130,6 +130,6 @@ sk["ghost"].release = 4
 
 operations = {"three" : Multiply("three", 3)}
 
-survival_kit_map = CommandMap(sk, operations)
+survival_kit_map = CommandMap(sk.playables, operations)
 
 #

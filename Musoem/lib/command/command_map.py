@@ -1,14 +1,17 @@
 from ..playables.section import SectionStub
 from ..operations.operations import *
-from ..score.score import Score, FileScore, SectionList
+from ..score.score import Score, FileScore
+from ..playables.section_list import SectionList
 from ..operations.control_operations import crescendo
 
 
+# This class represents the mapping between the input keywords and the music,
+# that will be used in the current session.
+
 class CommandMap:
-    def __init__(self, score, operations = {}):
-        self.score = {}
-        self._load_score(score)
-        self.operations = operations
+    def __init__(self, playables, operations = {}):
+        self.playables = dict(zip(list(map(lambda x: x.keyword, playables)), playables))
+        self.operations = dict(zip(list(map(lambda x: x.keyword, operations)), operations))
         self.wait_mark = ";"
         self.control = {"!" : crescendo("!",dur = 10, fromval = "ppp", toval = "fff"),
                         "?" : crescendo("?", dur = 10, fromval = "fff", toval = "ppp")}
@@ -16,11 +19,6 @@ class CommandMap:
         self.orKeywords = ["or", "Or"]
         self.pause_time = 2 # in beats
 
-    def _load_score(self, score):
-        if isinstance(score, FileScore):
-            self.score = score.sections
-        elif isinstance(score, Score):
-            print("not implemented")
 
     def add_control(self, list):
         for item in list:
@@ -31,15 +29,15 @@ class CommandMap:
             self.operations[item.keyword] = item
 
     def get_section(self, kw):
-        return self._get_item(kw, self.score)
+        return self._get_object(kw, self.playables)
 
     def get_operation(self, kw):
-        return self._get_item(kw, self.operations)
+        return self._get_object(kw, self.operations)
 
     def get_control(self, kw):
         return self._get_control(kw, self.control)
 
-    def _get_item(self, kw, dict):
+    def _get_object(self, kw, dict):
         obj = dict[kw]
         # TODO: make section list subclass of Section
         if isinstance(obj, SectionList):
@@ -47,8 +45,20 @@ class CommandMap:
         else:
             return obj
 
+    def __getitem__(self, key):
+        res = None
+        if key in self.playables:
+            res = self.playables[key]
+        elif key in self.operations:
+            res = self.operations[key]
+
+        if isinstance(res, SectionList):
+            return res.next
+        else:
+            return res
+
     def __str__(self):
-        res = "score: " + str(self.score)
+        res = "playables: " + str(self.playables)
         res += "\n control: " + str(self.control)
         res += "\n operations: " + str(self.operations)
 

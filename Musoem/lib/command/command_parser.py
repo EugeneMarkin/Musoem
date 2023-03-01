@@ -198,7 +198,7 @@ class CommandFactory:
             return SequenceCommand(l, self._map)
         else:
             key = space_seq[0]
-        if key in self._map.score:
+        if key in self._map.playables:
             return SectionCommand(key, self._map)
         elif key in self._map.operations:
             return OperationCommand(key,self._map)
