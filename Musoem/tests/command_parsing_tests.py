@@ -2,11 +2,12 @@ import unittest
 
 from music.mary_lamb import mary_map
 from tests.base_test import BaseTest
+from lib.player.now_playing import NowPlaying
 
 class MapTests(BaseTest):
 
     def test_map(self):
-        self.assertTrue(len(mary_map.score) > 0)
+        self.assertTrue(len(mary_map.playables) > 0)
         self.assertTrue(len(mary_map.control) > 0)
 
 class InterpreterTests(BaseTest):
@@ -111,6 +112,6 @@ class StoppingTests(InterpreterTests):
         st1 = self.statement("Mary had a little")
         self.assertIsPlaying(st1.top_playable, "Mary", 1)
         print("one" , NowPlaying.display())
-        NowPlaying.stop("Mary")
+        st1.top_playable.stop()
         self.assertIsNotPlaying("Mary", st1.top_playable)
         print(NowPlaying.display())

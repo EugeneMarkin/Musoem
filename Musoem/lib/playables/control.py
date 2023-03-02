@@ -17,7 +17,6 @@ class MidiControl(Control):
         if dur > 1:
             length = int((bpm / 60) * dur)
             self.pattern = Pattern([start_v + (i*(end_v - start_v)/(length-1)) for i in range(0, length)])
-            print("pattern is ", self.pattern)
         else:
             length = 1
             self.pattern = end_v

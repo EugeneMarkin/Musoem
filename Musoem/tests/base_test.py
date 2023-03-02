@@ -1,6 +1,10 @@
 import unittest
 from lib.player.now_playing import NowPlaying
 from lib.playables.playable import PlayableGroup
+from lib.command.command_parser import TextParser
+from music.mary_lamb import mary_map
+
+tp = TextParser(mary_map)
 
 class BaseTest(unittest.TestCase):
 
@@ -11,7 +15,7 @@ class BaseTest(unittest.TestCase):
         NowPlaying.reset()
         NowPlaying.bind_callback(self.callback)
         print("set up")
-        self.assertEqual(NowPlaying.playing, {})
+        self.assertEqual(NowPlaying.playing, [])
 
     def tearDown(self):
         print("tear down")
@@ -23,18 +27,17 @@ class BaseTest(unittest.TestCase):
 
     def assertIsPlaying(self, section, kw, times):
         self.assertIsNotNone(section)
-        self.assertTrue(kw in NowPlaying.playing)
+        self.assertTrue(section in NowPlaying.playing)
         self.assertTrue(section._isplaying)
-        self.assertEqual(NowPlaying.playing[kw], section)
         self.assertEqual(section._times, times)
 
     def assertIsNotPlaying(self, kw, section):
-        self.assertFalse(kw in NowPlaying.playing)
+        self.assertFalse(section in NowPlaying.playing)
         self.assertFalse(section._isplaying)
 
     def assertIsScheduled(self, root, kw, times):
         self.assertIsNotNone(root)
-        self.assertTrue(root.keyword in NowPlaying.playing)
+        self.assertTrue(root in NowPlaying.playing)
 
         for s in root:
             if kw == s.keyword:
@@ -54,7 +57,7 @@ class BaseTest(unittest.TestCase):
 
     def assertGroupIsScheduled(self, root, kws, times):
         self.assertIsNotNone(root)
-        self.assertTrue(root.keyword in NowPlaying.playing)
+        self.assertTrue(root in NowPlaying.playing)
 
         for s in root:
             if isinstance(s, PlayableGroup) and kws == list(map(lambda x: x.keyword, s)):
@@ -66,9 +69,9 @@ class BaseTest(unittest.TestCase):
         self.fail(kws + " is not scheduled")
 
     def assertEitherIsPlaying(self, kws, times):
-        for kw in kws:
-            if kw in NowPlaying.playing:
-                self.assertEqual(NowPlaying.playing[kw]._times, times)
+        for p in NowPlaying.playing:
+            if p.keyword in kws:
+                self.assertEqual(p._times, times)
                 return
         self.fail("none of " + kws + "is playing")
 
@@ -80,14 +83,14 @@ class BaseTest(unittest.TestCase):
         self.assertFalse(op_kw in section.operations)
 
     def get_playable(self, kw):
-        for k in NowPlaying.playing:
-            if k == kw:
-                return NowPlaying.playing[k]
+        for p in NowPlaying.playing:
+            if p.keyword == kw:
+                return p
             else:
-                for n in NowPlaying.playing[k]:
+                for n in p:
                     if n.keyword == kw:
                         return n
                     elif isinstance(n, PlayableGroup):
-                        for p in n:
-                            if p.keyword == kw:
-                                return p
+                        for k in n:
+                            if k.keyword == kw:
+                                return k

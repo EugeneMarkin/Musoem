@@ -4,7 +4,6 @@ from ..score.score import Score, FileScore
 from ..playables.section_list import SectionList
 from ..operations.control_operations import crescendo
 
-
 # This class represents the mapping between the input keywords and the music,
 # that will be used in the current session.
 
@@ -51,6 +50,8 @@ class CommandMap:
             res = self.playables[key]
         elif key in self.operations:
             res = self.operations[key]
+        elif key in self.control:
+            res = self.control[key]
 
         if isinstance(res, SectionList):
             return res.next

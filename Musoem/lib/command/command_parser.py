@@ -53,27 +53,7 @@ class Command:
 
     @property
     def result(self):
-        print("override me")
-
-
-class SectionCommand(Command):
-
-    @property
-    def result(self):
-        return self._map.get_section(self.keyword).copy()
-
-class OperationCommand(Command):
-
-    @property
-    def result(self):
-        print("there is my operation", self._map.get_operation(self.keyword))
-        return self._map.get_operation(self.keyword).copy()
-
-class ControlCommand(Command):
-
-    @property
-    def result(self):
-        return self._map.get_control(self.keyword).copy()
+        return self._map[self.keyword].copy()
 
 
 class SequenceCommand(Command):
@@ -198,17 +178,12 @@ class CommandFactory:
             return SequenceCommand(l, self._map)
         else:
             key = space_seq[0]
-        if key in self._map.playables:
-            return SectionCommand(key, self._map)
-        elif key in self._map.operations:
-            return OperationCommand(key,self._map)
-        elif key in self._map.control:
-            return ControlCommand(key, self._map)
-        elif key in self._map.andKeywords:
+        if key in self._map.andKeywords:
             return AndCommand(key, self._map)
         elif key in self._map.orKeywords:
             return OrCommand(key, self._map)
-
+        elif key in self._map.playables or key in self._map.operations or key in self._map.control:
+            return Command(key, self._map)
 
 
     def _list_commands(self, seq):

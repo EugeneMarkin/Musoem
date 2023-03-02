@@ -39,11 +39,11 @@ class NowPlaying:
 
     @classmethod
     def last(self):
-        durs = list(map(lambda x: x.time_till_end, self.playing.values()))
+        durs = list(map(lambda x: x.time_till_end, self.playing))
         if None in durs:
-            return list(self.playing.values())[durs.index(None)]
+            return self.playing[durs.index(None)]
         else:
-            return list(self.playing.values())[durs.index(max(durs))]
+            return self.playing[durs.index(max(durs))]
 
     @classmethod
     def bind_callback(self, callback):
