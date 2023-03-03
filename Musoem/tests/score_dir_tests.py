@@ -1,9 +1,12 @@
 import unittest
 import os
+from FoxDot import P
 from lib.score.score_dir import ScoreDir
 from lib.playables.sample import Sample, SampleList
 from lib.playables.section import Section
+from lib.playables.playable import PlayableGroup
 from lib.playables.section_list import SectionList
+from lib.operations.operations import *
 from run_tests import EXAMPLES_PATH
 
 class ScoreDirTests(unittest.TestCase):
@@ -59,3 +62,18 @@ class ScoreDirTests(unittest.TestCase):
 
         self.assertTrue(isinstance(map.playables["snow"], SectionList))
         self.assertEqual(map["snow"].instrument_key, "midi 1")
+
+    def test_config_file(self):
+        path = EXAMPLES_PATH + "/" + "score_with_config"
+        score_dir = ScoreDir(path)
+        map = score_dir.load()
+
+        self.assertTrue("marylamb" in map.playables)
+        self.assertTrue("backwards" in map.operations)
+        self.assertTrue("retro" in map.operations)
+
+        backwards = map.operations["backwards"]
+        marylamb = map.playables["marylamb"]
+        self.assertTrue(isinstance(backwards, ReversePitch))
+        self.assertTrue(isinstance(marylamb, PlayableGroup))
+        self.assertEqual(map.playables["Mary"].bpm, P[80, 120])

@@ -37,5 +37,12 @@ class ScoreDir:
             bpm = int(re.findall(r'bpm=([0-9]+)', project_name)[0])
             playables += FileScore(self.path, bpm).playables
 
-        cm = CommandMap(playables, configs)
+        operations = []
+        new_playables = []
+        for config in configs:
+            (ps, ops) = config.evaluate(playables)
+            new_playables += ps
+            operations += ops
+        playables += new_playables
+        cm = CommandMap(playables, operations)
         return cm

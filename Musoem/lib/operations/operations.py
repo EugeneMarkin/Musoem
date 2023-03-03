@@ -13,9 +13,8 @@ from ..player.now_playing import NowPlaying
 
 class Operation:
 
-    def __init__(self, keyword):
+    def __init__(self, keyword = None):
         self.keyword = keyword
-        self.display_style = "italic"
 
     def apply_to(self, playable):
         if isinstance(playable, PlayableGroup):
@@ -33,9 +32,6 @@ class Operation:
         print("override me")
 
 class SectionOperation(Operation):
-
-    def __init__(self, keyword):
-        self.keyword = keyword
 
     def pattern_keys(self):
         print("override me")
