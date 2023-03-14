@@ -64,6 +64,24 @@ class Playable(Entity):
     def total_dur(self):
         print("override me")
 
+    @property
+    def average_tempo(self):
+        print("override me")
+
+    @property
+    def time_till_end(self):
+        durs = []
+        for p in self:
+            if p._times is not None:
+                durs.append(self._get_clock_beats(p.total_dur))
+            else:
+                return None
+        return sum(durs)
+
+    def _get_clock_beats(self, beats):
+        return beats * Clock.bpm / self.average_tempo
+
+
     # call is duplicating the play function
     def __call__(self):
         self.play()
@@ -200,19 +218,6 @@ class SoundObject(Playable):
     def average_tempo(self):
         return sum(self.bpm)/len(self.bpm)
 
-    def _get_clock_beats(self, beats):
-        return beats * Clock.bpm / self.average_tempo
-
-
-    @property
-    def time_till_end(self):
-        durs = []
-        for p in self:
-            if p._times is not None:
-                durs.append(self._get_clock_beats(p.total_dur))
-            else:
-                return None
-        return sum(durs)
 
 
 class SoundGroup(Playable):
