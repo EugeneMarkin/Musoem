@@ -1,6 +1,6 @@
 import unittest
 from lib.player.now_playing import NowPlaying
-from lib.playables.playable import PlayableGroup
+from lib.playables.playable import SoundGroup
 from lib.command.command_parser import TextParser
 from music.mary_lamb import mary_map
 
@@ -47,7 +47,7 @@ class BaseTest(unittest.TestCase):
 
     def assertGroupIsPlaying(self, kws, times):
         for p in NowPlaying.playing:
-            if isinstance(p, PlayableGroup):
+            if isinstance(p, SoundGroup):
                 self.assertEqual(kws, list(map(lambda x: x.keyword, p)))
                 self.assertEqual(times, p._times)
                 if times == None:
@@ -60,7 +60,7 @@ class BaseTest(unittest.TestCase):
         self.assertTrue(root in NowPlaying.playing)
 
         for s in root:
-            if isinstance(s, PlayableGroup) and kws == list(map(lambda x: x.keyword, s)):
+            if isinstance(s, SoundGroup) and kws == list(map(lambda x: x.keyword, s)):
                 self.assertEqual(s._times, times)
                 if times == None:
                     for p in s:
@@ -91,7 +91,7 @@ class BaseTest(unittest.TestCase):
                 for n in p:
                     if n.keyword == kw:
                         return n
-                    elif isinstance(n, PlayableGroup):
+                    elif isinstance(n, SoundGroup):
                         for k in n:
                             if k.keyword == kw:
                                 return k

@@ -1,11 +1,11 @@
 from ..score.measure import Measure
 from FoxDot import Pattern, Player, FileSynthDef, Env, Scale, MidiOut, Clock, rest, P
-from .playable import Playable
+from .playable import SoundObject
 
 # A Section is a FoxDot-friendly class that represents a section of music for
 # a signle part and single voice.
 
-class Section(Playable):
+class Section(SoundObject):
 
     def __init__(self, measures:[Measure], instrument, keyword = "None"):
         super().__init__(instrument, keyword)

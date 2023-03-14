@@ -10,11 +10,11 @@ def loadAll(cls):
 if __name__ == '__main__':
 #     unittest.main()
     suite = unittest.TestSuite()
-    suite.addTest(InterpreterTests("test_solo_operation"))
+    #suite.addTest(ScoreDirTests("test_config_file"))
     #suite.addTests(loadAll(ScoreDirTests))
 
-    #suite.addTests(loadAll(MapTests))
-    #suite.addTests(loadAll(InterpreterTests))
+    suite.addTests(loadAll(MapTests))
+    suite.addTests(loadAll(InterpreterTests))
     #suite.addTests(loadAll(StoppingTests))
 
     runner = unittest.TextTestRunner()

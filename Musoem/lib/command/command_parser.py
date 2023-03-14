@@ -3,7 +3,7 @@ import re
 import functools
 
 from ..playables.section import Section
-from ..playables.playable import Schedulable
+from ..playables.playable import Playable
 from ..operations.operations import Operation, SectionOperationGroup
 from ..player.now_playing import NowPlaying
 
@@ -22,7 +22,7 @@ class CommandStatement:
     def execute(self):
         if self.top_control:
             self.top_control()
-        if isinstance(self.top_playable, Schedulable):
+        if isinstance(self.top_playable, Playable):
             if self.wait:
                 NowPlaying.last() >> self.top_playable
                 return
@@ -85,12 +85,12 @@ class SequenceCommand(Command):
         return res
 
     def _reduce_pair(self, a, b):
-        if isinstance(a, Schedulable)  and isinstance(b, Schedulable):
+        if isinstance(a, Playable)  and isinstance(b, Playable):
             return (a >> b)
-        elif isinstance(a,Schedulable) and isinstance(b, Operation) :
+        elif isinstance(a,Playable) and isinstance(b, Operation) :
             b.apply_to(a)
             return a
-        elif isinstance(a, Operation) and isinstance(b, Schedulable):
+        elif isinstance(a, Operation) and isinstance(b, Playable):
             a.apply_to(b)
             return b
         elif isinstance(a, Operation) and isinstance(b, Operation):
@@ -103,7 +103,7 @@ class PauseSequenceCommand(SequenceCommand):
     def result(self):
         l = list(map(lambda x: x.result, self.sequence))
         for p in l[1:]:
-            if isinstance(p, Schedulable):
+            if isinstance(p, Playable):
                 p % self._map.pause_time
         res = functools.reduce(self._reduce_pair, l)
         return res
@@ -140,14 +140,14 @@ class OrCommand(CombinationCommand):
 class AndCommand(CombinationCommand):
 
     def reduce(self, a, b):
-        if isinstance(a, Schedulable)  and isinstance(b, Schedulable):
+        if isinstance(a, Playable)  and isinstance(b, Playable):
             print("returning the sum of ", a, "and" , b)
             print("it is ", a+b)
             return a + b
-        elif isinstance(a, Schedulable) and isinstance(b, Operation):
+        elif isinstance(a, Playable) and isinstance(b, Operation):
             b.apply_to(a)
             return a
-        elif isinstance(a, Operation) and isinstance(b, Schedulable):
+        elif isinstance(a, Operation) and isinstance(b, Playable):
             a.apply_to(b)
             return b
         elif isinstance(a, Operation) and isinstance(b, Operation):

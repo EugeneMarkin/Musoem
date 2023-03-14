@@ -1,11 +1,11 @@
 import random
 from FoxDot import FileSynthDef, Buffer, PxRand, Pattern, PGroup, Clock, Player
 
-from .playable import Playable
+from .playable import SoundObject
 from ..player.section_player import SectionPlayer
 
 
-class Sample(Playable):
+class Sample(SoundObject):
 
     def __init__(self, instrument, keyword, bufnum):
         super().__init__(instrument, keyword)

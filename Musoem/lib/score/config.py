@@ -27,7 +27,6 @@ class Config:
     def evaluate(self, playables):
         # first create local variables for score objects that may be used in the script
         for p in playables:
-            print("playable ", p, "kw is ", p.keyword)
             command = "%s = %s" % (p.keyword, "p")
             exec(command)
         # define special variables for setting params to multiple objects in the script

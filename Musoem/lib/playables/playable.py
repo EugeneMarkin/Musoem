@@ -4,12 +4,9 @@ from ..player.section_player import SectionPlayer
 from ..player.now_playing import NowPlaying
 from .entity import Entity
 
-# A base class for Playable objects:
-# Section, SectionGroup
+# A base class for Playable objects
 
-# TODO: come up with a better name
-# maybe merge this with Entity
-class Schedulable(Entity):
+class Playable(Entity):
 
     def __init__(self, keyword):
         super().__init__(keyword)
@@ -130,7 +127,7 @@ class Schedulable(Entity):
         return False
 
 
-class Playable(Schedulable):
+class SoundObject(Playable):
 
     def __init__(self, instrument, keyword = "None"):
         self.initialized = False
@@ -177,7 +174,7 @@ class Playable(Schedulable):
 
     # add playables together
     def __add__(self, p):
-        return PlayableGroup([self, p])
+        return SoundGroup([self, p])
 
 
     def __setattr__(self, attr, val):
@@ -218,7 +215,7 @@ class Playable(Schedulable):
         return sum(durs)
 
 
-class PlayableGroup(Schedulable):
+class SoundGroup(Playable):
 
     def __init__(self, playables):
         super().__init__(reduce(lambda a,b: a.keyword + "," + b.keyword, playables))
@@ -252,7 +249,7 @@ class PlayableGroup(Schedulable):
         return self.__class__(list(map(lambda p: p.copy(), self)))
 
     def append(self, other):
-        if isinstance(other, PlayableGroup):
+        if isinstance(other, SoundGroup):
             for p in other: self.append(p)
         else:
             self.playables.append(other)

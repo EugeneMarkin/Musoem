@@ -2,7 +2,7 @@ from music21.dynamics import Dynamic
 from FoxDot import PRange, Pattern, PGroup
 
 from ..playables.section import Section
-from ..playables.playable import PlayableGroup, Control
+from ..playables.playable import SoundGroup, Control
 from ..player.now_playing import NowPlaying
 
 # A class for music transformation
@@ -17,7 +17,7 @@ class Operation:
         self.keyword = keyword
 
     def apply_to(self, playable):
-        if isinstance(playable, PlayableGroup):
+        if isinstance(playable, SoundGroup):
             # apply to each playable in group
             for p in playable: self.copy().apply_to(p)
             return True
