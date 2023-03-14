@@ -1,4 +1,3 @@
-from ..playables.section import SectionStub
 from ..operations.operations import *
 from ..score.score import Score, FileScore
 from ..playables.section_list import SectionList

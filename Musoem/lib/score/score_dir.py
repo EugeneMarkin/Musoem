@@ -34,9 +34,14 @@ class ScoreDir:
                     continue
             # all directories at this level should be instrument dirs
             project_name = os.path.basename(self.path)
-            bpm = int(re.findall(r'bpm=([0-9]+)', project_name)[0])
-            playables += FileScore(self.path, bpm).playables
+            any_bpm = re.findall(r'bpm=([0-9]+)', project_name)
+            if any_bpm != []:
+                bpm = int(any_bpm[0])
+                playables += FileScore(self.path, bpm).playables
+            else:
+                playables += FileScore(self.path).playables
 
+        print("parsed playables are: ", playables)
         operations = []
         new_playables = []
         for config in configs:

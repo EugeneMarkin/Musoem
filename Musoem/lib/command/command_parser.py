@@ -3,7 +3,7 @@ import re
 import functools
 
 from ..playables.section import Section
-from ..playables.playable import Playable, PlayableGroup
+from ..playables.playable import Schedulable
 from ..operations.operations import Operation, SectionOperationGroup
 from ..player.now_playing import NowPlaying
 
@@ -14,6 +14,7 @@ class CommandStatement:
         self.loop = True if expression_mark is None else False
         self.wait = True if expression_mark == map.wait_mark else False
         self.top_playable = self._parse_line(line)
+        print("top playable after parsing ", self.top_playable)
         self.top_control = None
         if expression_mark:
             self.top_control = self._parse_line(expression_mark)
@@ -21,7 +22,7 @@ class CommandStatement:
     def execute(self):
         if self.top_control:
             self.top_control()
-        if isinstance(self.top_playable, Playable):
+        if isinstance(self.top_playable, Schedulable):
             if self.wait:
                 NowPlaying.last() >> self.top_playable
                 return
@@ -83,12 +84,12 @@ class SequenceCommand(Command):
         return res
 
     def _reduce_pair(self, a, b):
-        if isinstance(a, Playable)  and isinstance(b, Playable):
+        if isinstance(a, Schedulable)  and isinstance(b, Schedulable):
             return (a >> b)
-        elif isinstance(a,Playable) and isinstance(b, Operation) :
+        elif isinstance(a,Schedulable) and isinstance(b, Operation) :
             b.apply_to(a)
             return a
-        elif isinstance(a, Operation) and isinstance(b, Playable):
+        elif isinstance(a, Operation) and isinstance(b, Schedulable):
             a.apply_to(b)
             return b
         elif isinstance(a, Operation) and isinstance(b, Operation):
@@ -101,7 +102,7 @@ class PauseSequenceCommand(SequenceCommand):
     def result(self):
         l = list(map(lambda x: x.result, self.sequence))
         for p in l[1:]:
-            if isinstance(p, Playable):
+            if isinstance(p, Schedulable):
                 p % self._map.pause_time
         res = functools.reduce(self._reduce_pair, l)
         return res
@@ -138,12 +139,14 @@ class OrCommand(CombinationCommand):
 class AndCommand(CombinationCommand):
 
     def reduce(self, a, b):
-        if isinstance(a, Playable)  and isinstance(b, Playable):
+        if isinstance(a, Schedulable)  and isinstance(b, Schedulable):
+            print("returning the sum of ", a, "and" , b)
+            print("it is ", a+b)
             return a + b
-        elif isinstance(a, Playable) and isinstance(b, Operation):
+        elif isinstance(a, Schedulable) and isinstance(b, Operation):
             b.apply_to(a)
             return a
-        elif isinstance(a, Operation) and isinstance(b, Playable):
+        elif isinstance(a, Operation) and isinstance(b, Schedulable):
             a.apply_to(b)
             return b
         elif isinstance(a, Operation) and isinstance(b, Operation):

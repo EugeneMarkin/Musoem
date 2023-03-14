@@ -174,14 +174,13 @@ class Diminuendo(Crescendo):
 
 class SampleOperation(Operation):
 
-    def __init__(self, keyword):
+    def __init__(self, keyword = None):
         super().__init__(keyword)
 
     def apply_to(self, sample):
         print("applying operation ", self.keyword)
         self.sample = sample
         if super().apply_to(sample):
-            print("early return")
             return
         self.execute()
         NowPlaying.update()
@@ -189,17 +188,20 @@ class SampleOperation(Operation):
 
 class Multiply(SampleOperation):
 
-    def __init__(self, kw, value):
-        super().__init__(kw)
+    def __init__(self, value, pan):
+        super().__init__()
         self.value = value
+        if isinstance(pan, list):
+            self.pan = pan
+        else:
+            self.pan = [pan]
 
     def execute(self):
-        print("executing sample operation ", self.sample, self.value)
         if isinstance(self.sample.bufnum, Pattern):
             self.sample.bufnum = PGroup([self.sample.bufnum[i] for i in range(0, self.value)] )
-            self.sample.pan = PGroup()
         else:
             self.sample.bufnum = PGroup([self.sample.bufnum]*self.value)
+        self.sample.pan = PGroup(pan)
 
     def copy(self):
         return self.__class__(self.keyword, self.value)

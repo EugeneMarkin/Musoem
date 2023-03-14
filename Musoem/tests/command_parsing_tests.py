@@ -66,7 +66,7 @@ class InterpreterTests(BaseTest):
     def test_operation2(self):
         st = self.statement("reverse Mary and lamb")
         self.assertGroupIsPlaying(["Mary", "lamb"], None)
-        self.assertOperationApplied("reverse", self.get_playable("Mary"),)
+        self.assertOperationApplied("reverse", self.get_playable("Mary"))
         self.assertOperationApplied("reverse", self.get_playable("lamb"))
 
     def test_solo_operation(self):

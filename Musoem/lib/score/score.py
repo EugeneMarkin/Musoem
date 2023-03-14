@@ -2,7 +2,6 @@ import os
 from music21.stream import Score as M21Score
 from music21.stream import Measure as M21Measure
 from music21.stream import PartStaff
-from music21.instrument import Instrument
 from music21.tempo import MetronomeMark
 from music21 import converter
 from FoxDot import Pattern, Server
@@ -13,6 +12,7 @@ from .time_signature import TimeSignature
 from ..playables.section import Section
 from ..playables.sample import Sample, SampleList
 from ..playables.section_list import SectionList
+from ..player.instrument import Instrument
 
 from ..parsers.parsers import ScoreParser, MidiParser
 from .part import Part
@@ -21,7 +21,6 @@ from .part import Part
 # A class representing an entire score coming from a single MusicXML file
 # Score consists of parts - single staff part in the MusicXML score
 # Part can have single or multiple voices (as in music engraving software)
-
 
 class Score:
 
@@ -61,8 +60,7 @@ class MusicXMLScore(Score):
             else:
                 voice_part = part.voices[voice]
 
-        instrument_key = part.instrument
-        section = voice_part.section(from_measure, to_measure, instrument_key)
+        section = voice_part.section(from_measure, to_measure)
         print(section.description)
         return section
 
@@ -100,18 +98,18 @@ class FileScore(Score):
         self._playables = {}
         self.buf_num_generator = BufNumGenerator()
         dir = os.listdir(folder_path)
-        for instrument in dir:
+        for instr in dir:
             # skip system files
-            if instrument[0] == ".":
+            if instr[0] == ".":
                 continue
-            if not os.path.isdir(folder_path + "/" + instrument):
+            if not os.path.isdir(folder_path + "/" + instr):
                 continue
-            instrument_path = folder_path + "/" + instrument
+            instrument_path = folder_path + "/" + instr
             instrument_dir = os.listdir(instrument_path)
-            if "midi" in instrument:
-                self._playables.update(self.load_midi_files(instrument_dir, instrument, instrument_path))
-            elif "sample" in instrument:
-                self._playables.update(self.load_audio_files(instrument_dir, instrument, instrument_path))
+            if "midi" in instr: # TODO: change this
+                self._playables.update(self.load_midi_files(instrument_dir, Instrument(instr), instrument_path))
+            elif "sample" in instr:
+                self._playables.update(self.load_audio_files(instrument_dir, Instrument(instr), instrument_path))
 
     def load_midi_files(self, files, instrument, path):
         result = {}
@@ -141,7 +139,7 @@ class FileScore(Score):
             if ".wav" in file or ".aif" in file or ".aiff" in file:
                 bufnum = self.buf_num_generator.next
                 Server.bufferRead(path + "/" + file, bufnum)
-                sample = Sample(kw, instrument, bufnum)
+                sample = Sample(instrument, kw, bufnum)
                 result[kw] = sample
                 bufnum += 1
             # if the instrument directory contains subdirectories
@@ -150,10 +148,10 @@ class FileScore(Score):
                     files = sorted(os.listdir(path + "/" + file))
                     sample_set = self.load_audio_files(files, instrument, path + "/" + file).values()
                     sample_set = list(sample_set)
-                    if len(sample_set) > 1:
+                    if len(sample_set) >= 1:
                         buffers = list(map(lambda x: x.bufnum, sample_set))
                         print(buffers)
-                        sample_set = SampleList(kw, instrument, buffers)
+                        sample_set = SampleList(instrument, kw , buffers)
                         for s in sample_set: s.keyword = kw
                         result[kw] = sample_set
                     else:

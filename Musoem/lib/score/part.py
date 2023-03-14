@@ -10,6 +10,7 @@
 # in case of polyphonic texture for example.
 from ..parsers.parsers import PartStaffParser
 from ..parsers.parsers import MeasureParser
+from ..player.instrument import Instrument
 from .voice import Voice
 from .measure import Measure
 
@@ -17,7 +18,7 @@ class Part:
 
     def __init__(self, psp: PartStaffParser):
         self.text_marks = psp.text_marks
-        self.instrument = psp.instrument
+        self.instrument = Instrument(psp.instrument)
         self.clef = psp.clef
         self._voices = {}
         self.id = psp.id
@@ -38,7 +39,7 @@ class Part:
             id = mp.id
             measure = Measure(id, pitch, octave, duration, sustain, amp, bpm, ts)
             if voice_key not in self._voices:
-                voice = Voice(voice_key, [measure])
+                voice = Voice(voice_key, [measure], self.instrument)
                 self._voices[voice_key] = voice
             else:
                 self._voices[voice_key].append(measure)

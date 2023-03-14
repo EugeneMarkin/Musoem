@@ -39,7 +39,7 @@ class ScoreDirTests(unittest.TestCase):
         mary = map["Mary"]
         self.assertEqual(len(mary._measures), 2)
         self.assertEqual(mary.instrument_key, "piano")
-        self.assertTrue(isinstance(mary, Section))
+        self.assertTrue(isinst.ance(mary, Section))
 
         lamb = map["lamb"]
         self.assertEqual(len(lamb._measures), 2)
@@ -77,3 +77,8 @@ class ScoreDirTests(unittest.TestCase):
         self.assertTrue(isinstance(backwards, ReversePitch))
         self.assertTrue(isinstance(marylamb, PlayableGroup))
         self.assertEqual(map.playables["Mary"].bpm, P[80, 120])
+
+    def test_allp_keyword(self):
+        path = EXAMPLES_PATH + "/" + "filescore (bpm=80)"
+        score_dir = ScoreDir(path)
+        map = score_dir.load()

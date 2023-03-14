@@ -1,24 +1,26 @@
-from FoxDot import Pattern, Clock
+from FoxDot import Pattern, Clock, P
 from functools import reduce
-
+from ..player.section_player import SectionPlayer
 from ..player.now_playing import NowPlaying
 from .entity import Entity
 
 # A base class for Playable objects:
-# Section, SectionGroup, ControlOperation
-class Playable(Entity):
+# Section, SectionGroup
 
-    def __init__(self, keyword = "None"):
+# TODO: come up with a better name
+# maybe merge this with Entity
+class Schedulable(Entity):
+
+    def __init__(self, keyword):
         super().__init__(keyword)
         self.wait = 0 # a delay to wait before starting to play
         self._next = None # next Playable object after this one
-        self._parent = None
+        self._parent = None # the Playable that will trigger this playback of this object when finished
         self._times = 1 # the number of repeats (gets overriden if different value is passed to play())
         self._isplaying = False
-        self.operations = {}
 
-    # start playing with "times" repeats and "self.wait" delay
     def play(self):
+        print("calling super")
         if self.wait != 0:
             Clock.future(self._get_clock_beats(self.wait), self.play)
             self.wait = 0
@@ -36,7 +38,6 @@ class Playable(Entity):
             Clock.future(delay_beats, self.stop)
 
         NowPlaying.add(self)
-
         return self
 
     # stops the current playable and triggers the next thats linked to it
@@ -62,18 +63,17 @@ class Playable(Entity):
             if self._next is not None:
                 self._parent >> self._next
 
-    # the represenation of the Playable in the performance window
-    def display(self):
-        res = [self]
-        for op in self.operations.values(): res.append(op)
+    @property
+    def total_dur(self):
+        print("override me")
 
-        if self._next is not None:
-            res += self._next.display()
-        return res
+    # call is duplicating the play function
+    def __call__(self):
+        self.play()
 
     @property
-    def display_style(self):
-        return "normal"
+    def last(self):
+        return iter(self)[-1]
 
     @property
     def root(self):
@@ -82,15 +82,7 @@ class Playable(Entity):
             cur = cur._parent
         return cur
 
-    @property
-    def last(self):
-        return iter(self)[-1]
-
-    # call is duplicating the play function
-    def __call__(self):
-        self.play()
-
-    # set next playable after this one
+    # set next schedulable after this one
     def __rshift__(self, other):
         if other in self:
             other = other.copy()
@@ -107,17 +99,13 @@ class Playable(Entity):
                 self._times = times
         return self
 
-    # add playables together
-    def __add__(self, section):
-        return PlayableGroup([self, section])
-
-    # delay a playable
+    # delay a schedulable
     def __mod__(self, delay):
         if (isinstance(delay, float) or isinstance(delay, int)):
             self.wait = delay
         return self
 
-    # stop the playable
+    # stop the schdulable
     def __invert__(self):
         self.stop()
 
@@ -141,6 +129,76 @@ class Playable(Entity):
                 return True
         return False
 
+
+class Playable(Schedulable):
+
+    def __init__(self, instrument, keyword = "None"):
+        self.initialized = False
+        super().__init__(keyword)
+        self.instrument = instrument
+        self.player = SectionPlayer()
+        self.params = {"degree" : P([])}
+        self.operations = {}
+        self.initialized = True
+
+    # start playing with "times" repeats and "self.wait" delay
+    def play(self):
+        if not super().play():
+            return
+
+        self.player = SectionPlayer()
+        if self.instrument is None:
+            raise Exception("Can't play the section because there is no instrument")
+
+        degree = self.params["degree"]
+        kwargs = self.params.copy()
+        kwargs = self.params.pop("degree")
+        self.player >> self.instrument.synthdef(degree, **self.params)
+
+
+    def stop(self):
+        if self._isplaying == True:
+            self.player.stop()
+        super().stop()
+
+
+    # the represenation of the Playable in the performance window
+    def display(self):
+        res = [self]
+        for op in self.operations.values(): res.append(op)
+
+        if self._next is not None:
+            res += self._next.display()
+        return res
+
+    @property
+    def display_style(self):
+        return "normal"
+
+    # add playables together
+    def __add__(self, p):
+        return PlayableGroup([self, p])
+
+
+    def __setattr__(self, attr, val):
+        if attr == "initialized" or attr in self.__dict__:
+            self.__dict__[attr] = val
+        else:
+            if not self.initialized:
+                self.__dict__[attr] = val
+            else:
+                self.params[attr] = val
+                if self._isplaying:
+                    self.player.__setattr__(attr, val)
+
+    def __getattr__(self, attr):
+        if attr in self.params:
+            return self.params[attr]
+        return None
+
+    def __getitem__(self, key):
+        return self.params[key]
+
     @property
     def average_tempo(self):
         return sum(self.bpm)/len(self.bpm)
@@ -148,9 +206,6 @@ class Playable(Entity):
     def _get_clock_beats(self, beats):
         return beats * Clock.bpm / self.average_tempo
 
-    @property
-    def total_dur(self):
-        print("override me")
 
     @property
     def time_till_end(self):
@@ -163,13 +218,14 @@ class Playable(Entity):
         return sum(durs)
 
 
-class PlayableGroup(Playable):
+class PlayableGroup(Schedulable):
 
     def __init__(self, playables):
         super().__init__(reduce(lambda a,b: a.keyword + "," + b.keyword, playables))
         self.playables = playables
 
     def play(self):
+        print("called play on playable group")
         if super().play() is None:
             return self
 

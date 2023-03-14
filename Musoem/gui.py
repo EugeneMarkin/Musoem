@@ -4,11 +4,9 @@ from functools import reduce
 from uuid import uuid4
 import os
 
-from music.survival_kit import survival_kit_map
 from lib.player.now_playing import NowPlaying
 from lib.command.command_parser import TextParser
 from lib.score.score_dir import ScoreDir
-
 
 class Tag:
 

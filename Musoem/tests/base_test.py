@@ -83,6 +83,7 @@ class BaseTest(unittest.TestCase):
         self.assertFalse(op_kw in section.operations)
 
     def get_playable(self, kw):
+        print("NowPlaying.playing is", NowPlaying.playing)
         for p in NowPlaying.playing:
             if p.keyword == kw:
                 return p

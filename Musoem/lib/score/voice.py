@@ -14,20 +14,21 @@ class Voice:
     # Initializer takes a list of Measure objects, which are created during parsing in
     # Part class initialization
     # TODO: should the parsing be happening elsewhere?
-    def __init__(self, id, measures_list: [Measure]):
+    def __init__(self, id, measures_list: [Measure], instrument):
         self.id = id
         self._measures = measures_list
+        self.instrument = instrument
 
     # Append a measure to the voice
     def append(self, mes: Measure):
         self._measures.append(mes)
     # Get a Section object from this voice, containing a range of measures
-    def section(self, from_measure: int, to_measure: int, instrument = None) -> Section:
-        return Section(self._measures[from_measure-1:to_measure], instrument)
+    def section(self, from_measure: int, to_measure: int) -> Section:
+        return Section(self._measures[from_measure-1:to_measure], self.instrument)
     # Get a Section object containing ALL the measures in this voice
     @property
-    def all(self, instrument = None) -> Section:
-        return Section(self._measures)
+    def all(self) -> Section:
+        return Section(self._measures, self.instrument)
 
     # Get the measures list of this voice
     @property
