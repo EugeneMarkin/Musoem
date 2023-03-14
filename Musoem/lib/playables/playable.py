@@ -152,8 +152,8 @@ class Playable(Schedulable):
 
         degree = self.params["degree"]
         kwargs = self.params.copy()
-        kwargs = self.params.pop("degree")
-        self.player >> self.instrument.synthdef(degree, **self.params)
+        kwargs.pop("degree")
+        self.player >> self.instrument.synthdef(degree, **kwargs)
 
 
     def stop(self):

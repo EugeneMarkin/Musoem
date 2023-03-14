@@ -31,6 +31,7 @@ class CommandStatement:
             self.top_playable = self.top_playable.root
             self.top_playable()
         elif isinstance(self.top_playable, Operation):
+            print("Now playing all ",NowPlaying.all())
             list(map(lambda p: self.top_playable.copy().apply_to(p), NowPlaying.all()))
 
 
