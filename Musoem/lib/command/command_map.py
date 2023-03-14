@@ -1,6 +1,5 @@
 from ..operations.operations import *
 from ..score.score import Score, FileScore
-from ..playables.section_list import SectionList
 from ..operations.control_operations import crescendo
 
 # This class represents the mapping between the input keywords and the music,
@@ -26,23 +25,6 @@ class CommandMap:
         for item in list:
             self.operations[item.keyword] = item
 
-    def get_section(self, kw):
-        return self._get_object(kw, self.playables)
-
-    def get_operation(self, kw):
-        return self._get_object(kw, self.operations)
-
-    def get_control(self, kw):
-        return self._get_control(kw, self.control)
-
-    def _get_object(self, kw, dict):
-        obj = dict[kw]
-        # TODO: make section list subclass of Section
-        if isinstance(obj, SectionList):
-            return obj.next
-        else:
-            return obj
-
     def __getitem__(self, key):
         res = None
         if key in self.playables:
@@ -51,11 +33,7 @@ class CommandMap:
             res = self.operations[key]
         elif key in self.control:
             res = self.control[key]
-
-        if isinstance(res, SectionList):
-            return res.next
-        else:
-            return res
+        return res
 
     def __str__(self):
         res = "playables: " + str(self.playables)

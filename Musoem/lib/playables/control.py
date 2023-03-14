@@ -1,7 +1,47 @@
 from FoxDot import MidiOut, Clock, TimeVar, Pattern, Scale
 
 from ..player.section_player import SectionPlayer
-from .playable import Control
+from .playable import Playable
+
+class Control(Playable):
+
+    def __init__(self, keyword, dur):
+        super().__init__(keyword)
+        self.dur = dur
+
+    def play(self):
+        if super().play() is None:
+            return self
+        self.execute()
+
+    def execute(self):
+        print("override me")
+
+    def stop(self):
+        super().stop()
+
+    def cancel(self):
+        # not sure how to do that
+        super().cancel()
+
+    def copy(self):
+        return self.__class__(self.keyword, self.dur)
+
+    def reset(self):
+        print("reset")
+
+    @property
+    def display_style(self):
+        return "wide"
+
+    @property
+    def total_dur(self):
+        return self.dur
+
+    @property
+    def average_tempo(self):
+        return Clock.bpm
+
 
 class MidiControl(Control):
 

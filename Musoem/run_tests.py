@@ -10,7 +10,7 @@ def loadAll(cls):
 if __name__ == '__main__':
 #     unittest.main()
     suite = unittest.TestSuite()
-    #suite.addTest(ScoreDirTests("test_config_file"))
+#    suite.addTest(ScoreDirTests("test_convenience_keywords"))
     suite.addTests(loadAll(ScoreDirTests))
 
     suite.addTests(loadAll(MapTests))

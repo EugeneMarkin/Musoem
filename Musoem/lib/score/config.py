@@ -30,11 +30,15 @@ class Config:
             command = "%s = %s" % (p.keyword, "p")
             exec(command)
         # define special variables for setting params to multiple objects in the script
-        all_p = Container(playables)
-        sections = list(filter(lambda x: isinstance(x, Section), playables))
-        all_sections = Container(sections)
-        samples = list(filter(lambda x: isinstance(x, Sample), playables))
-        all_samples = Container(samples)
+        # all sound objects: sections and samples
+        all_sounds = Container(playables)
+        # all section objects
+        all_sections = Container(list(filter(lambda x: isinstance(x, Section), playables)))
+        # all sample objects
+        all_samples = Container(list(filter(lambda x: isinstance(x, Sample), playables)))
+        # all sound objects that play this instrument
+        all_with_instrument = lambda x: Container(list(filter(lambda y: y.instrument.key == x, playables)))
+
         # now load the script and execute it
         with open(self.path, "r") as file:
             script = file.read()

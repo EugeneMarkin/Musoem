@@ -9,9 +9,8 @@ from FoxDot import Pattern, Server
 from .measure import Measure
 from .time_signature import TimeSignature
 
-from ..playables.section import Section
+from ..playables.section import Section, SectionList
 from ..playables.sample import Sample, SampleList
-from ..playables.section_list import SectionList
 from ..player.instrument import Instrument
 
 from ..parsers.parsers import ScoreParser, MidiParser
@@ -121,7 +120,7 @@ class FileScore(Score):
             elif os.path.isdir(path + "/" + file):
                 files = sorted(os.listdir(path + "/" + file))
                 midi_set = self.load_midi_files(files, instrument, path + "/" + file).values()
-                midi_set = SectionList(list(midi_set), kw)
+                midi_set = SectionList(instrument, kw, list(midi_set))
                 for s in midi_set: s.keyword = kw
                 result[kw] = midi_set
         return result

@@ -1,6 +1,7 @@
 from ..score.measure import Measure
 from FoxDot import Pattern, Player, FileSynthDef, Env, Scale, MidiOut, Clock, rest, P
 from .playable import SoundObject
+import random
 
 # A Section is a FoxDot-friendly class that represents a section of music for
 # a signle part and single voice.
@@ -51,3 +52,38 @@ class Section(SoundObject):
     @property
     def description(self):
         return str(self.patterns)
+
+
+class SectionList(Section):
+
+    def __init__(self, instrument, keyword, list):
+        super().__init__([], instrument, keyword)
+        self.initialized = False
+        self.list = list
+        self.index = 0
+        self.ordered = False
+        self.initialized = True
+
+    def copy(self):
+        return self.__class__(self.list, self.keyword)
+
+    def play(self):
+        self.__dict__["params"] = self.next_section.params
+        self.__dict__["instrument"] = self.next_section.intrument
+        super().play()
+
+    @property
+    def next_section(self):
+        if self.ordered:
+            res = self.list[self.index]
+            if self.index < len(self.list) - 1:
+                self.index += 1
+            else:
+                self.index = 0
+            return res
+        else:
+            idx = random.randint(0, len(self.list) - 1)
+            return self.list[idx]
+
+    def __iter__(self):
+        return iter(self.list)
