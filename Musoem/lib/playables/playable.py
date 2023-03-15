@@ -302,7 +302,7 @@ class SoundGroup(Playable):
 
     def apply_operation(self, operation):
         for p in self:
-            p.apply_operation(operation)
+            p.apply_operation(operation.copy())
 
     @property
     def total_dur(self):

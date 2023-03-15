@@ -14,7 +14,6 @@ class CommandStatement:
         self.loop = True if expression_mark is None else False
         self.wait = True if expression_mark == map.wait_mark else False
         self.top_playable = self._parse_line(line)
-        print("top playable after parsing ", self.top_playable)
         self.top_control = None
         if expression_mark:
             self.top_control = self._parse_line(expression_mark)

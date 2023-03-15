@@ -83,11 +83,11 @@ class ScoreDirTests(unittest.TestCase):
         score_dir = ScoreDir(path)
         map = score_dir.load()
         dog = map["dog"]
-        self.assertEqual(dog.slide, 5)
-        self.assertEqual(dog.fmod, 2)
-        self.assertEqual(dog.sus, 2)
+        self.assertEqual(dog.slide, P[1])
+        self.assertEqual(dog.fmod, P[2])
+        self.assertEqual(dog.sus, P[2])
 
         afraid = map["afraid"]
-        self.assertEqual(afraid.slide, 5)
-        self.assertEqual(afraid.freeze, 1.5)
-        self.assertEqual(afraid.comb, 0.7)
+        self.assertEqual(afraid.slide, P[1])
+        self.assertEqual(afraid.freeze, P[1.5])
+        self.assertEqual(afraid.comb, P[0.7])

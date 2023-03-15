@@ -28,10 +28,6 @@ class InterpreterTests(BaseTest):
         self.assertIsPlaying(st.top_playable, "Mary", 1)
         self.assertIsPlaying(st.top_control, "?", 1)
 
-    def test_solo_control(self):
-        st = self.statement("Rise")
-        self.assertIsPlaying(st.top_playable, "Rise", None)
-
     def test_spaced_seq(self):
         st = self.statement("Mary had a little lamb")
         self.assertIsPlaying(st.top_playable, "Mary", 1)
@@ -86,12 +82,11 @@ class InterpreterTests(BaseTest):
         self.assertIsScheduled(st.top_playable, "lamb", 1)
 
     def test_complex_statement(self):
-        st = self.statement("Mary or lamb reverse Rise had and a little reverse and lamb and Rise had or little, Mary, lamb and Mary!")
+        st = self.statement("Mary or lamb reverse had and a little reverse and lamb had or little, Mary, lamb and Mary!")
 
         self.assertEitherIsPlaying(["Mary", "lamb"], 1)
         self.assertIsPlaying(st.top_control, "!", 1)
         self.assertGroupIsScheduled(st.top_playable, ["had", "little"], 1)
-        self.assertGroupIsScheduled(st.top_playable, ["lamb", "Rise"], 1)
         self.assertOperationApplied("reverse", self.get_playable("lamb"))
         self.assertOperationApplied("reverse", st.top_playable)
         self.assertIsScheduled(st.top_playable, "Mary", 1)

@@ -16,11 +16,10 @@ class BaseTest(unittest.TestCase):
     def setUp(self):
         NowPlaying.reset()
         NowPlaying.bind_callback(self.callback)
-        print("set up")
         self.assertEqual(NowPlaying.playing, [])
 
     def tearDown(self):
-        print("tear down")
+        foo = "bar"
 
     def statement(self, line):
         statement = tp.parse_line(line)
@@ -60,7 +59,6 @@ class BaseTest(unittest.TestCase):
     def assertGroupIsScheduled(self, root, kws, times):
         self.assertIsNotNone(root)
         self.assertTrue(root in NowPlaying.playing)
-
         for s in root:
             if isinstance(s, SoundGroup) and kws == list(map(lambda x: x.keyword, s)):
                 self.assertEqual(s._times, times)
@@ -68,7 +66,7 @@ class BaseTest(unittest.TestCase):
                     for p in s:
                         self.assertEqual(p._times, None)
                 return
-        self.fail(kws + " is not scheduled")
+        self.fail(str(kws) + " is not scheduled")
 
     def assertEitherIsPlaying(self, kws, times):
         for p in NowPlaying.playing:

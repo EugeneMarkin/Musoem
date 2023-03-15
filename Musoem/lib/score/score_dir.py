@@ -11,6 +11,7 @@ from ..util.utils import get_bpm_from_path
 class ScoreDir:
     def __init__(self, path):
         self.path = path
+        self.bpm = None
         if not os.path.isdir(path):
             raise Exception("no file at path ", path)
 
