@@ -12,6 +12,7 @@ from .time_signature import TimeSignature
 from ..playables.section import Section, SectionList
 from ..playables.sample import Sample, SampleList
 from ..player.instrument import Instrument
+from ..util.utils import get_bpm_from_path
 
 from ..parsers.parsers import ScoreParser, MidiParser
 from .part import Part
@@ -60,7 +61,6 @@ class MusicXMLScore(Score):
                 voice_part = part.voices[voice]
 
         section = voice_part.section(from_measure, to_measure)
-        print(section.description)
         return section
 
     @property
@@ -91,24 +91,27 @@ class MusicXMLScore(Score):
 # This class assembles a score out of midi and/or audio files contained in a dir
 class FileScore(Score):
 
-    def __init__(self, folder_path, bpm = 120):
-        self.bpm = bpm
+    def __init__(self, folder_path):
         # TODO: rename this to playables
         self._playables = {}
         self.buf_num_generator = BufNumGenerator()
         dir = os.listdir(folder_path)
         for instr in dir:
             # skip system files
+            instrument_path = folder_path + "/" + instr
             if instr[0] == ".":
                 continue
-            if not os.path.isdir(folder_path + "/" + instr):
+            if not os.path.isdir(instrument_path):
                 continue
-            instrument_path = folder_path + "/" + instr
             instrument_dir = os.listdir(instrument_path)
             if "midi" in instr: # TODO: change this
                 self._playables.update(self.load_midi_files(instrument_dir, Instrument(instr), instrument_path))
             elif "sample" in instr:
                 self._playables.update(self.load_audio_files(instrument_dir, Instrument(instr), instrument_path))
+            any_bpm = get_bpm_from_path(instrument_path)
+            for p in self._playables.values():
+                if p.bpm == None or p.bpm == Pattern([]) :
+                    p.bpm = Pattern([any_bpm])
 
     def load_midi_files(self, files, instrument, path):
         result = {}
@@ -127,7 +130,7 @@ class FileScore(Score):
 
     def midi_section(self, file, instrument, keyword):
         mp = MidiParser(file)
-        measure = Measure(1, mp.pitch, mp.octave, mp.duration, mp.sus, mp.amp, self.bpm, TimeSignature(4,4))
+        measure = Measure(1, mp.pitch, mp.octave, mp.duration, mp.sus, mp.amp, [], TimeSignature(4,4))
         return Section([measure], instrument, keyword)
 
 
@@ -149,7 +152,6 @@ class FileScore(Score):
                     sample_set = list(sample_set)
                     if len(sample_set) >= 1:
                         buffers = list(map(lambda x: x.bufnum, sample_set))
-                        print(buffers)
                         sample_set = SampleList(instrument, kw , buffers)
                         for s in sample_set: s.keyword = kw
                         result[kw] = sample_set

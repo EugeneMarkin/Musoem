@@ -21,7 +21,6 @@ class Container:
 class Config:
 
     def __init__(self, path):
-        print("foo bar")
         self.path = path
 
     def evaluate(self, playables):

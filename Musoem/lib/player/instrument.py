@@ -6,10 +6,9 @@ class Instrument:
     def __init__(self, key):
         self.key = key
         if "midi" in key:
-            print("if")
             split_key = key.split(" ")
             if (len(split_key) != 2):
-                print("invalid midi instrument ", split_key)
+                print("WARNING: invalid midi instrument ", split_key)
                 return
             self.synthdef = MidiOut
             self.midi_channel = int(split_key[1])

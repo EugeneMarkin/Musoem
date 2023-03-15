@@ -1,168 +1,122 @@
 from music21.dynamics import Dynamic
 from FoxDot import PRange, Pattern, PGroup
 
+from ..base.entity import Entity
 from ..playables.section import Section
+from ..playables.sample import Sample
 from ..playables.playable import SoundGroup
 from ..playables.control import Control
 from ..player.now_playing import NowPlaying
 
 # A class for music transformation
 
-# When subclassing
-# override pattern_keys() and return affected keys
-# and override the "execute()" method
-
-class Operation:
-
-    def __init__(self, keyword = None):
-        self.keyword = keyword
-
-    def apply_to(self, playable):
-        if isinstance(playable, SoundGroup):
-            # apply to each playable in group
-            for p in playable: self.copy().apply_to(p)
-            return True
-        elif isinstance(playable, Control):
-            # operations can't be applied to control, so we look for sections
-            if playable._parent is not None:
-                self.apply_to(playable._parent)
-                return True
-        return False
-
-    def execute():
-        print("override me")
-
-class SectionOperation(Operation):
-
-    def pattern_keys(self):
-        print("override me")
-        return None
-
-    def apply_to(self, playable):
-
-        if super().apply_to(playable):
-            return
-        self.section = playable
-        if self.keyword in self.section.operations:
-            return
-        # section needs to know its operations so we can remove them
-        self.section.operations[self.keyword] = self
-        # store the initial values so that we can
-        vals = [self.section[key].copy() for key in self.pattern_keys()]
-        self.initial_vals = dict(zip(self.pattern_keys(), vals))
-
-        self.execute()
-        NowPlaying.update()
+class Operation(Entity):
 
     def copy(self):
         return self.__class__(self.keyword)
 
+    def execute(self, sound_object):
+        self.__dict__["sound"] = sound_object
+        self.__dict__["initial_params"] = sound_object.params.copy()
+        self.__dict__["changed_params"] = []
+        self.perform()
 
-    def reset(self):
-        # undo the effect of the operation
-        # if there were several operations, remove them from right to left
-        # to return to the initial state.
-        print("calling reset")
-        for key in self.initial_vals.keys():
-            print ("key ", key, "current ", self.section[key], "initial ", self.initial_vals[key])
-            self.section[key] = self.initial_vals[key]
+    def perform(self):
+        print("override me")
 
-        # if we reset an operation, all the operations added later will be
-        # effectively reset, so we remove them also
-        ops = list(self.section.operations.keys())
-        for i in range(ops.index(self.keyword), len(ops)):
-            kw = ops[i]
-            self.section.operations.pop(kw)
-        self.section = None # TODO: add this back
-
-    def __invert__(self):
-        self.reset()
+    def undo(self):
+        if not self.sound:
+            return
+        for key in self.changed_params:
+            self.sound.__setattr__(key, self.initial_params[key])
         NowPlaying.update()
 
+    def __setattr__(self, key, value):
+        if self.sound is not None and key in self.sound.params:
+            self.changed_params.append(key)
+            self.sound.__setattr__(key, value)
+        else:
+            self.__dict__[key] = value
+
+    def __getattr__(self, key):
+        if key in self.__dict__:
+            return self.__dict__[key]
+        elif "sound" in self.__dict__ and key in self.__dict__["sound"].params:
+            return self.__dict__["sound"][key]
+        return None
+
+    def __invert__(self):
+        self.undo()
+
     def __add__(self, other):
-        return SectionOperationGroup(self, other)
+        return OperationGroup(self, other)
 
-    @property
-    def display_style(self):
-        return "italic"
-
-class SectionOperationGroup(SectionOperation):
+class OperationGroup(Operation):
 
     def __init__(self, operations):
         self.keyword = super().__init__(reduce(lambda a,b: a.keyword + "," + b.keyword, operations))
         self.operations = operations
 
-
-    def apply_to(self, section):
-        for op in self.operations:
-            op.apply_to(section)
-
     def append(self, other):
-        if isinstance(other, SectionOperationGroup):
-            for op in other.operations: self.append(op)
+        if isinstance(other, OperationGroup):
+            for op in other.operations:
+                if op not in self.operations:
+                    self.append(op)
         else:
             self.operations.append(other)
             self.keyword += "," + other.keyword
 
     def __add__(self, other):
         if other in self.operations:
-            other = other.copy()
+            return self
         self.append(other)
         return self
 
-class ReversePitch(SectionOperation):
 
-    def pattern_keys(self):
-        return ["degree", "oct"]
+class ReversePitch(Operation):
 
-    def execute(self):
-        self.section.degree = self.section.degree.reverse()
-        self.section.oct = self.section.oct.reverse()
+    def perform(self):
+        self.degree = self.degree.reverse()
+        self.oct = self.oct.reverse()
 
-class Retrograde(SectionOperation):
+class Retrograde(Operation):
 
-    def pattern_keys(self):
-        return ["dur"]
+    def perform(self):
+        self.dur = self.dur.reverse()
 
-    def execute(self):
-        self.section.dur = self.section.dur.reverse()
+# Transposes the sound by a number of semitones
+class Transpose(Operation):
 
-
-class Transpose(SectionOperation):
-
-    def __init__(self, kw, t):
+    def __init__(self, t):
+        super().__init__()
         self.t = t
-        super().__init__(kw)
-
-    def pattern_keys(self):
-        return ["degree"]
 
     def copy(self):
-        return self.__class__(self.keyword, self.t)
+        return self.__class__(self.t, self.keyword)
 
-    def execute(self):
-        self.section.degree = self.section.degree + self.t
+    def perform(self):
+        self.degree = self.degree + self.t
 
-
-class Crescendo(SectionOperation):
+#TODO: refactor this
+class Crescendo(Operation):
 
     def __init__(self, fromval = "pp", toval = "fff"):
         self.fromval = Dynamic(fromval).volumeScalar
         self.toval = Dynamic(toval).volumeScalar
 
+    def copy(self):
+        return self.__class__(fromval, toval)
+
     def amp_pattern(self):
-        length = len(self.initialDegree)
+        length = len(self.degree)
         new_amp = Pattern([])
         for i in range(0, length):
             new_amp.append(self.fromval + (self.toval - self.fromval)/i)
         return new_amp
 
-    def apply(self):
-        section.player.amp = self.amp_pattern()
+    def perform(self):
+        self.amp = self.amp_pattern()
 
-    def stop(self, section):
-        print("stopping crescendo")
-        self.player.amp = self.initialAmp
 
 class Diminuendo(Crescendo):
 
@@ -173,21 +127,7 @@ class Diminuendo(Crescendo):
         return super().amp_pattern().reverse()
 
 
-class SampleOperation(Operation):
-
-    def __init__(self, keyword = None):
-        super().__init__(keyword)
-
-    def apply_to(self, sample):
-        print("applying operation ", self.keyword)
-        self.sample = sample
-        if super().apply_to(sample):
-            return
-        self.execute()
-        NowPlaying.update()
-
-
-class Multiply(SampleOperation):
+class Multiply(Operation):
 
     def __init__(self, value, pan):
         super().__init__()
@@ -197,12 +137,16 @@ class Multiply(SampleOperation):
         else:
             self.pan = [pan]
 
-    def execute(self):
-        if isinstance(self.sample.bufnum, Pattern):
-            self.sample.bufnum = PGroup([self.sample.bufnum[i] for i in range(0, self.value)] )
-        else:
-            self.sample.bufnum = PGroup([self.sample.bufnum]*self.value)
-        self.sample.pan = PGroup(pan)
-
     def copy(self):
-        return self.__class__(self.keyword, self.value)
+        return self.__class__(value, pan)
+
+    def execute(self):
+        if isinstance(self.sound, Sample):
+            if isinstance(self.bufnum, Pattern) and val <= len(self.bufnum):
+                self.bufnum = PGroup([self.bufnum[i] for i in range(0, self.value)] )
+            else:
+                self.bufnum = PGroup([self.bufnum]*self.value)
+        else:
+            self.degree = PGroup([self.degree]*self.value)
+
+        self.pan = PGroup(pan)

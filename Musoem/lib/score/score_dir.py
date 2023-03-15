@@ -1,14 +1,18 @@
 import os
 import re
+from FoxDot import Clock, Pattern
 from .score import MusicXMLScore, FileScore
 from .config import Config
 from ..command.command_map import CommandMap
+from ..util.utils import get_bpm_from_path
 
 # This class represents a file directory containing any type of score
 # It is used by the File->Open dialog to load up music data into Musoem
 class ScoreDir:
     def __init__(self, path):
         self.path = path
+        if not os.path.isdir(path):
+            raise Exception("no file at path ", path)
 
     # loads the score directory and parses it into playables and
     # config files
@@ -33,15 +37,13 @@ class ScoreDir:
                     configs.append(conf)
                     continue
             # all directories at this level should be instrument dirs
-            project_name = os.path.basename(self.path)
-            any_bpm = re.findall(r'bpm=([0-9]+)', project_name)
+            any_bpm = get_bpm_from_path(self.path)
             if any_bpm != []:
-                bpm = int(any_bpm[0])
-                playables += FileScore(self.path, bpm).playables
+                self.bpm = int(any_bpm[0])
             else:
-                playables += FileScore(self.path).playables
+                self.bpm = Clock.bpm
+            playables += FileScore(self.path).playables
 
-        print("parsed playables are: ", playables)
         operations = []
         new_playables = []
         for config in configs:
@@ -49,5 +51,9 @@ class ScoreDir:
             new_playables += ps
             operations += ops
         playables += new_playables
+        if self.bpm:
+            for p in playables:
+                if p.bpm is None or p.bpm == Pattern([]):
+                    p.bpm = [self.bpm]
         cm = CommandMap(playables, operations)
         return cm

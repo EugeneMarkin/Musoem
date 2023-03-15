@@ -1,5 +1,5 @@
 from ..score.measure import Measure
-from FoxDot import Pattern, Player, FileSynthDef, Env, Scale, MidiOut, Clock, rest, P
+from FoxDot import Pattern, Player, FileSynthDef, Env, Scale, MidiOut, Clock, rest
 from .playable import SoundObject
 import random
 
@@ -14,7 +14,7 @@ class Section(SoundObject):
         self._measures = measures
         keys = ["degree", "oct", "dur", "sus", "bpm", "amp"]
         for k in keys:
-            self.params[k] = P([])
+            self.params[k] = Pattern([])
 
         for mes in measures:
             self.params["degree"].extend(mes.degree)
@@ -27,7 +27,10 @@ class Section(SoundObject):
         self.initialized = True
 
     def copy(self):
-        return self.__class__(self._measures, instrument = self.instrument, keyword = self.keyword)
+        cp = self.__class__([], instrument = self.instrument, keyword = self.keyword)
+        cp.__dict__["measures"] = self._measures.copy()
+        cp.__dict__["params"] = self.params.copy()
+        return cp
 
     @property
     def total_dur(self):
@@ -51,7 +54,7 @@ class Section(SoundObject):
 
     @property
     def description(self):
-        return str(self.patterns)
+        return str(self.params)
 
 
 class SectionList(Section):

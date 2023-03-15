@@ -1,14 +1,12 @@
 import unittest
-
-from music.mary_lamb import mary_map
-from tests.base_test import BaseTest
+from tests.base_test import BaseTest, test_map
 from lib.player.now_playing import NowPlaying
 
 class MapTests(BaseTest):
 
     def test_map(self):
-        self.assertTrue(len(mary_map.playables) > 0)
-        self.assertTrue(len(mary_map.control) > 0)
+        self.assertTrue(len(test_map.playables) > 0)
+        self.assertTrue(len(test_map.control) > 0)
 
 class InterpreterTests(BaseTest):
 
@@ -42,6 +40,7 @@ class InterpreterTests(BaseTest):
         self.assertIsScheduled(st.top_playable, "lamb", None)
 
     def test_and(self):
+        bpms = list(map(lambda x: x.bpm, test_map.playables.values()))
         st = self.statement("Mary had little and lamb")
         self.assertIsPlaying(st.top_playable, "Mary", 1)
         self.assertIsScheduled(st.top_playable, "had", 1)
@@ -85,7 +84,6 @@ class InterpreterTests(BaseTest):
         st = self.statement("Mary, lamb!")
         self.assertIsPlaying(st.top_playable, "Mary", 1)
         self.assertIsScheduled(st.top_playable, "lamb", 1)
-        print("now ", NowPlaying.playing)
 
     def test_complex_statement(self):
         st = self.statement("Mary or lamb reverse Rise had and a little reverse and lamb and Rise had or little, Mary, lamb and Mary!")
@@ -111,7 +109,5 @@ class StoppingTests(InterpreterTests):
     def test_stop_section(self):
         st1 = self.statement("Mary had a little")
         self.assertIsPlaying(st1.top_playable, "Mary", 1)
-        print("one" , NowPlaying.display())
         st1.top_playable.stop()
         self.assertIsNotPlaying("Mary", st1.top_playable)
-        print(NowPlaying.display())

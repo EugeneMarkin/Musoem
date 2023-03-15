@@ -2,9 +2,11 @@ import unittest
 from lib.player.now_playing import NowPlaying
 from lib.playables.playable import SoundGroup
 from lib.command.command_parser import TextParser
-from music.mary_lamb import mary_map
+from lib.score.score_dir import ScoreDir
 
-tp = TextParser(mary_map)
+EXAMPLES_PATH = "/Users/eugenemarkin/Documents/Musoem/Musoem/music/examples"
+test_map = ScoreDir(EXAMPLES_PATH + "/" + "filescore (bpm=80)").load()
+tp = TextParser(test_map)
 
 class BaseTest(unittest.TestCase):
 
@@ -77,13 +79,12 @@ class BaseTest(unittest.TestCase):
 
     def assertOperationApplied(self, op_kw, section):
         self.assertTrue(op_kw in section.operations)
-        self.assertEqual(section.operations[op_kw].section, section)
+        self.assertEqual(section.operations[op_kw].sound, section)
 
     def assertOperationNotApplied(self, op_kw, section):
         self.assertFalse(op_kw in section.operations)
 
     def get_playable(self, kw):
-        print("NowPlaying.playing is", NowPlaying.playing)
         for p in NowPlaying.playing:
             if p.keyword == kw:
                 return p

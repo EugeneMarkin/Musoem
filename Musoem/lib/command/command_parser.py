@@ -4,7 +4,7 @@ import functools
 
 from ..playables.section import Section
 from ..playables.playable import Playable
-from ..operations.operations import Operation, SectionOperationGroup
+from ..operations.operations import Operation, OperationGroup
 from ..player.now_playing import NowPlaying
 
 class CommandStatement:
@@ -31,8 +31,7 @@ class CommandStatement:
             self.top_playable = self.top_playable.root
             self.top_playable()
         elif isinstance(self.top_playable, Operation):
-            print("Now playing all ",NowPlaying.all())
-            list(map(lambda p: self.top_playable.copy().apply_to(p), NowPlaying.all()))
+            list(map(lambda p: p.apply_operation(self.top_playable.copy()), NowPlaying.all()))
 
 
     def _parse_line(self, line):
@@ -88,10 +87,10 @@ class SequenceCommand(Command):
         if isinstance(a, Playable)  and isinstance(b, Playable):
             return (a >> b)
         elif isinstance(a,Playable) and isinstance(b, Operation) :
-            b.apply_to(a)
+            a.apply_operation(b)
             return a
         elif isinstance(a, Operation) and isinstance(b, Playable):
-            a.apply_to(b)
+            b.apply_operation(a)
             return b
         elif isinstance(a, Operation) and isinstance(b, Operation):
             return a + b
@@ -141,17 +140,15 @@ class AndCommand(CombinationCommand):
 
     def reduce(self, a, b):
         if isinstance(a, Playable)  and isinstance(b, Playable):
-            print("returning the sum of ", a, "and" , b)
-            print("it is ", a+b)
             return a + b
         elif isinstance(a, Playable) and isinstance(b, Operation):
-            b.apply_to(a)
+            a.apply_operation(b)
             return a
         elif isinstance(a, Operation) and isinstance(b, Playable):
-            a.apply_to(b)
+            b.apply_operation(a)
             return b
         elif isinstance(a, Operation) and isinstance(b, Operation):
-            return SectionOperationGroup([a,b])
+            return OperationGroup([a,b])
 
     def __str__(self):
         return str("and")

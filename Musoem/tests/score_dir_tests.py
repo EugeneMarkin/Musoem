@@ -7,7 +7,7 @@ from lib.playables.section import Section, SectionList
 from lib.playables.playable import SoundGroup
 from lib.operations.operations import *
 from lib.player.instrument import Instrument
-from run_tests import EXAMPLES_PATH
+from .base_test import EXAMPLES_PATH
 
 class ScoreDirTests(unittest.TestCase):
 
@@ -82,13 +82,12 @@ class ScoreDirTests(unittest.TestCase):
         path = EXAMPLES_PATH + "/" + "filescore (bpm=80)"
         score_dir = ScoreDir(path)
         map = score_dir.load()
-        print("playables in test ", map.playables)
         dog = map["dog"]
-        self.assertEqual(dog.degree, 5)
-        self.assertEqual(dog.oct, 2)
+        self.assertEqual(dog.slide, 5)
+        self.assertEqual(dog.fmod, 2)
         self.assertEqual(dog.sus, 2)
 
         afraid = map["afraid"]
-        self.assertEqual(afraid.degree, 5)
+        self.assertEqual(afraid.slide, 5)
         self.assertEqual(afraid.freeze, 1.5)
         self.assertEqual(afraid.comb, 0.7)
