@@ -152,7 +152,9 @@ class FileScore(Score):
                     sample_set = list(sample_set)
                     if len(sample_set) >= 1:
                         buffers = list(map(lambda x: x.bufnum, sample_set))
+                        print("keyword for sample set ", kw)
                         sample_set = SampleList(instrument, kw , buffers)
+                        print("keyword for sample set ", kw)
                         for s in sample_set: s.keyword = kw
                         result[kw] = sample_set
                     else:

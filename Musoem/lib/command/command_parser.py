@@ -194,13 +194,13 @@ class CommandFactory:
 class TextParser:
 
     def __init__(self, command_map):
-        self._map = command_map
+        self.command_map = command_map
 
     def parse_line(self, line):
         res = re.findall(r'^([^\.\?\!\;]+)([\.\?\!\;]+)\s?$', line)
         statement = None
         if len(res) == 0: # there is no mark in the end of sentence
-            statement = CommandStatement(line, map = self._map)
+            statement = CommandStatement(line, map = self.command_map)
         else:
-            statement = CommandStatement(res[0][0], res[0][1], map = self._map)
+            statement = CommandStatement(res[0][0], res[0][1], map = self.command_map)
         return statement

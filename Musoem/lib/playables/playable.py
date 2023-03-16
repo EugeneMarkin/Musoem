@@ -10,12 +10,15 @@ class Playable(Entity):
 
     def __init__(self, keyword):
         super().__init__(keyword)
-        self.wait = 0 # a delay to wait before starting to play
-        self._next = None # next Playable object after this one
-        self._parent = None # the Playable that will trigger this playback of this object when finished
-        self._times = 1 # the number of repeats (gets overriden if different value is passed to play())
-        self._isplaying = False
-        self.operations = {}
+        # here and elsewhere we use __dict__ subscript to define instance variables
+        # because of the overriden __setattr__, which needs to distinguish between
+        # instance variables and params sent to player
+        self.__dict__["wait"] = 0 # a delay to wait before starting to play
+        self.__dict__["_next"] = None # next Playable object after this one
+        self.__dict__["_parent"] = None # the Playable that will trigger this playback of this object when finished
+        self.__dict__["_times"] = 1 # the number of repeats (gets overriden if different value is passed to play())
+        self.__dict__["_isplaying"] = False
+        self.__dict__["operations"] = {}
 
     def play(self):
         if self.wait != 0:
@@ -161,12 +164,10 @@ class Playable(Entity):
 class SoundObject(Playable):
 
     def __init__(self, instrument, keyword = "None"):
-        self.initialized = False
         super().__init__(keyword)
-        self.instrument = instrument
-        self.player = SectionPlayer()
-        self.params = {"degree" : Pattern([])}
-        self.initialized = True
+        self.__dict__["instrument"] = instrument
+        self.__dict__["player"] = SectionPlayer()
+        self.__dict__["params"] = {"degree" : Pattern([]), "dur" : Pattern([1])}
 
     # start playing with "times" repeats and "self.wait" delay
     def play(self):
@@ -199,21 +200,19 @@ class SoundObject(Playable):
 
 
     def __setattr__(self, attr, val):
-        if attr == "initialized" or attr in self.__dict__:
+        if attr in self.__dict__:
             self.__dict__[attr] = val
         else:
-            if not self.initialized:
-                self.__dict__[attr] = val
-            else:
-                if not isinstance(val, Pattern):
-                    if isinstance(val, list):
-                        val = Pattern(val)
-                    elif isinstance(val, int) or isinstance(val, float):
-                        val = Pattern([val])
-                self.params[attr] = val
-                self.player.__setattr__(attr, val)
+            if not isinstance(val, Pattern):
+                if isinstance(val, list):
+                    val = Pattern(val)
+                elif isinstance(val, int) or isinstance(val, float):
+                    val = Pattern([val])
+            self.params[attr] = val
+            self.player.__setattr__(attr, val)
 
     def __getattr__(self, attr):
+        print("getting attribute from ", attr)
         if attr in self.params:
             return self.params[attr]
         return None
@@ -231,7 +230,7 @@ class SoundGroup(Playable):
 
     def __init__(self, playables):
         super().__init__(reduce(lambda a,b: a.keyword + "," + b.keyword, playables))
-        self.playables = playables
+        self.__dict__["playables"] = playables
 
     def play(self):
         if super().play() is None:
@@ -265,6 +264,13 @@ class SoundGroup(Playable):
         else:
             self.playables.append(other)
             self.keyword += "," + other.keyword
+
+    def __setattr__(self, key, value):
+        if key in self.__dict__:
+            self.__dict__[key] = value
+        else:
+            for p in self.playables:
+                p.__setattr__(key, value)
 
     def __add__(self, other):
         if other in self:

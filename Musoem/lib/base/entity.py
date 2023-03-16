@@ -4,8 +4,8 @@
 class Entity(object):
 
     def __init__(self, keyword = "None"):
-        self.keyword = keyword
-        self.font_style = "normal"
+        self.__dict__["keyword"] = keyword
+        self.__dict__["display_style"] = "normal"
 
     def display(self):
         return [self]

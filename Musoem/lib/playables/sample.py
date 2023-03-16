@@ -13,7 +13,7 @@ class Sample(SoundObject):
         #default_params = [1, 1, 4, 5, 1.1, 0, 0, 0.5, 0.5, 0.2, 10, 1, 1, 0] # change these to be plain playback, or remove them actually
 
     def copy(self):
-        res = self.__class__(self.keyword, self.instrument, self.bufnum)
+        res = self.__class__(self.instrument, self.keyword, self.bufnum)
         res.params = self.params
         return res
 
@@ -30,20 +30,19 @@ class Sample(SoundObject):
 
 class SampleList(Sample):
 
-
     def __init__(self, instrument, keyword, bufnums):
 
         super().__init__(instrument, keyword, bufnums[0])
-        self.bufnums = bufnums
+        self.__dict__["bufnums"] = bufnums
         if len(bufnums) > 1:
             self.bufnum = PxRand(bufnums[0], bufnums[-1])
         else:
             self.bufnum = bufnums[0]
-        self.ordered = False
-        self.buf_counter = -1
+        self.__dict__["ordered"] = False
+        self.__dict__["buf_counter"] = -1
 
     def copy(self):
-        res = self.__class__(self.keyword, self.instrument_key, self.bufnums)
+        res = self.__class__(self.instrument, self.keyword , self.bufnums)
         res.params = self.params
         res.ordered = self.ordered
         self.buf_counter += 1

@@ -12,6 +12,7 @@ class ScoreDir:
     def __init__(self, path):
         self.path = path
         self.bpm = None
+        self.configs = None
         if not os.path.isdir(path):
             raise Exception("no file at path ", path)
 
@@ -45,12 +46,8 @@ class ScoreDir:
                 self.bpm = Clock.bpm
             playables += FileScore(self.path).playables
 
-        operations = []
-        new_playables = []
-        for config in configs:
-            (ps, ops) = config.evaluate(playables)
-            new_playables += ps
-            operations += ops
+        self.configs = configs
+        (new_playables, operations) = self._execute_configs(configs, playables)
         playables += new_playables
         if self.bpm:
             for p in playables:
@@ -58,3 +55,21 @@ class ScoreDir:
                     p.bpm = [self.bpm]
         cm = CommandMap(playables, operations)
         return cm
+
+    def _execute_configs(self, configs, playables):
+        operations = []
+        new_playables = []
+        for config in configs:
+            (ps, ops) = config.evaluate(playables)
+            new_playables += ps
+            operations += ops
+        playables += new_playables
+        return new_playables, operations
+
+    def update_configs(self, command_map):
+        if self.configs:
+            (new_playables, operations) = self._execute_configs(self.configs, list(command_map.playables.values()))
+            # TODO: move the dict zip to utils
+            command_map.operations = dict(zip(list(map(lambda x: x.keyword, operations)), operations))
+            command_map.playables.update(dict(zip(list(map(lambda x: x.keyword, new_playables)), new_playables)))
+        return command_map

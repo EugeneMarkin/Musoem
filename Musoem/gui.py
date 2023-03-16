@@ -41,11 +41,12 @@ class Menu:
         # TODO: add a preferences file serialization to open the most
         # recent project
         self.command_map = None
-
+        self.score_dir = None
         self.menubar = tk.Menu(app)
         filemenu = tk.Menu(self.menubar, tearoff = 0)
-        filemenu.add_command(label="Open", command=self.open_file)
-        filemenu.add_command(label="Reload", command=self.reload)
+        filemenu.add_command(label = "Open", command = self.open_file, accelerator = "Ctrl+o")
+        filemenu.add_command(label = "Reload Current Score", command = self.reload, accelerator = "Ctrl+r")
+        filemenu.add_command(label = "Update Configs", command = self.update, accelerator = "Ctr+u")
         self.menubar.add_cascade(label="File", menu = filemenu)
         app.config(menu = self.menubar)
         app.winfo_toplevel().title("Musoem")
@@ -61,8 +62,15 @@ class Menu:
         NowPlaying.reset()
         self._load(self.dir_path)
 
+    def update(self):
+        print("update")
+        if self.score_dir:
+            new_map = self.score_dir.update_configs(app.command_parser.command_map)
+            app.command_parser.command_map = new_map
+
     def _load(self, path):
-        command_map = ScoreDir(path).load()
+        self.score_dir = ScoreDir(path)
+        command_map = self.score_dir.load()
         app.command_parser = TextParser(command_map)
 
 class Gui(tk.Tk):
@@ -89,12 +97,28 @@ class Gui(tk.Tk):
         self.menu = Menu(self)
 
 
+    def check_shortcuts(self, event):
+        if event.keysym == "o" and (event.state & 0x0004):
+            self.menu.open_file()
+            return "break"
+        elif event.keysym == "r" and (event.state & 0x0004):
+            self.menu.reload()
+            return "break"
+        elif event.keysym == "u" and (event.state & 0x0004):
+            self.menu.update()
+            return "break"
+        return None
+
     def key_press(self, event):
+        if self.check_shortcuts(event):
+            return 'break'
         if event.keysym == "Return" and (event.state & 0x0004): # mask for ctrl key
             self.execute()
             return 'break'
 
     def output_edit(self, event):
+        if self.check_shortcuts(event):
+            return 'break'
         if event.keysym in ["Down", "Up", "Left", "Right"]:
             return
         elif event.keysym != "BackSpace":

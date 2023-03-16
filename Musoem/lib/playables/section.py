@@ -10,8 +10,7 @@ class Section(SoundObject):
 
     def __init__(self, measures:[Measure], instrument, keyword = "None"):
         super().__init__(instrument, keyword)
-        self.initialized = False
-        self._measures = measures
+        self.__dict__["_measures"] = measures
         keys = ["degree", "oct", "dur", "sus", "bpm", "amp"]
         for k in keys:
             self.params[k] = Pattern([])
@@ -24,7 +23,6 @@ class Section(SoundObject):
             self.params["bpm"].extend(mes.bpm)
             self.params["amp"].extend(mes.amp)
 
-        self.initialized = True
 
     def copy(self):
         cp = self.__class__([], instrument = self.instrument, keyword = self.keyword)

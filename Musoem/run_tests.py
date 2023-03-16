@@ -8,7 +8,7 @@ def loadAll(cls):
 if __name__ == '__main__':
 #     unittest.main()
     suite = unittest.TestSuite()
-#    suite.addTest(InterpreterTests("test_complex_statement"))
+#    suite.addTest(InterpreterTests("test_or"))
     suite.addTests(loadAll(ScoreDirTests))
 
     suite.addTests(loadAll(MapTests))

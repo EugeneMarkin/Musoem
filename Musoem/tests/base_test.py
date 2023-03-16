@@ -73,7 +73,7 @@ class BaseTest(unittest.TestCase):
             if p.keyword in kws:
                 self.assertEqual(p._times, times)
                 return
-        self.fail("none of " + kws + "is playing")
+        self.fail("none of " + str(kws) + "is playing")
 
     def assertOperationApplied(self, op_kw, section):
         self.assertTrue(op_kw in section.operations)
