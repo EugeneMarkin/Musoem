@@ -48,7 +48,7 @@ class Config:
         new_playables = []
         new_vars = re.findall(r'(.+)?\s=.', script)
         for v in new_vars:
-            if re.findall(r'[\.\[\]]', v) != []:
+            if re.findall(r'[\.\[\]#]', v) != []:
                 continue
             obj = locals()[v]
             if isinstance(obj, Operation):
