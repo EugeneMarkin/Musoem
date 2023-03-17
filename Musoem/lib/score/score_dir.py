@@ -3,6 +3,7 @@ import re
 from FoxDot import Clock, Pattern
 from .score import MusicXMLScore, FileScore
 from .config import Config
+from ..player.now_playing import NowPlaying
 from ..command.command_map import CommandMap
 from ..util.utils import get_bpm_from_path
 
@@ -57,19 +58,26 @@ class ScoreDir:
         return cm
 
     def _execute_configs(self, configs, playables):
+        # replace the objects here with the ones that are already playing
+        # so that changes in config will take instant effect
+        for p in playables:
+            current_p = NowPlaying.find(p.keyword)
+            if current_p:
+                playables[playables.index(p)] = current_p
         operations = []
         new_playables = []
         for config in configs:
             (ps, ops) = config.evaluate(playables)
             new_playables += ps
             operations += ops
-        playables += new_playables
         return new_playables, operations
 
     def update_configs(self, command_map):
         if self.configs:
-            (new_playables, operations) = self._execute_configs(self.configs, list(command_map.playables.values()))
+            playables = list(command_map.playables.values())
+            (new_playables, operations) = self._execute_configs(self.configs, playables)
             # TODO: move the dict zip to utils
+            final_playables = playables + new_playables
             command_map.operations = dict(zip(list(map(lambda x: x.keyword, operations)), operations))
-            command_map.playables.update(dict(zip(list(map(lambda x: x.keyword, new_playables)), new_playables)))
+            command_map.playables = dict(zip(list(map(lambda x: x.keyword, final_playables)), final_playables))
         return command_map

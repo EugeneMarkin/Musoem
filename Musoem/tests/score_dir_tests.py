@@ -91,3 +91,4 @@ class ScoreDirTests(unittest.TestCase):
         self.assertEqual(afraid.slide, P[1])
         self.assertEqual(afraid.freeze, P[1.5])
         self.assertEqual(afraid.comb, P[0.7])
+        

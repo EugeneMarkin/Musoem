@@ -48,3 +48,18 @@ class NowPlaying:
     @classmethod
     def bind_callback(self, callback):
         self.callback = callback
+
+    @classmethod
+    def find(self, kw):
+        for p in NowPlaying.playing:
+            if p.keyword == kw:
+                return p
+            else:
+                for n in p:
+                    if n.keyword == kw:
+                        return n
+                    elif n.is_compound:
+                        for k in n:
+                            if k.keyword == kw:
+                                return k
+        return None

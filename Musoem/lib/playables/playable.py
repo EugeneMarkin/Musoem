@@ -32,7 +32,6 @@ class Playable(Entity):
         self._isplaying = True
 
         self._parent = None
-
         if self._times is not None:
             delay_beats = self._get_clock_beats(self.total_dur)
             Clock.future(delay_beats, self.stop)
@@ -160,6 +159,9 @@ class Playable(Entity):
                 return True
         return False
 
+    @property
+    def is_compound(self):
+        return False
 
 class SoundObject(Playable):
 
@@ -167,7 +169,7 @@ class SoundObject(Playable):
         super().__init__(keyword)
         self.__dict__["instrument"] = instrument
         self.__dict__["player"] = SectionPlayer()
-        self.__dict__["params"] = {"degree" : Pattern([]), "dur" : Pattern([1])}
+        self.__dict__["params"] = {"degree" : None, "dur" : Pattern([1])}
 
     # start playing with "times" repeats and "self.wait" delay
     def play(self):
@@ -181,7 +183,7 @@ class SoundObject(Playable):
         degree = self.params["degree"]
         kwargs = self.params.copy()
         kwargs.pop("degree")
-        self.player >> self.instrument.synthdef(degree, **kwargs)
+        self.player >> self.instrument.synthdef(degree = degree, **kwargs)
 
 
     def stop(self):
@@ -209,10 +211,11 @@ class SoundObject(Playable):
                 elif isinstance(val, int) or isinstance(val, float):
                     val = Pattern([val])
             self.params[attr] = val
-            self.player.__setattr__(attr, val)
+            if self._isplaying:
+                print("updating player with ", attr, " to ", val )
+                self.player.__setattr__(attr, val)
 
     def __getattr__(self, attr):
-        print("getting attribute from ", attr)
         if attr in self.params:
             return self.params[attr]
         return None
@@ -228,8 +231,10 @@ class SoundObject(Playable):
 
 class SoundGroup(Playable):
 
-    def __init__(self, playables):
-        super().__init__(reduce(lambda a,b: a.keyword + "," + b.keyword, playables))
+    def __init__(self, playables, keyword = None):
+        if keyword == None:
+            keyword = reduce(lambda a,b: a.keyword + "," + b.keyword, playables)
+        super().__init__(keyword)
         self.__dict__["playables"] = playables
 
     def play(self):
@@ -256,7 +261,7 @@ class SoundGroup(Playable):
 
 
     def copy(self):
-        return self.__class__(list(map(lambda p: p.copy(), self)))
+        return self.__class__(list(map(lambda p: p.copy(), self)), self.keyword)
 
     def append(self, other):
         if isinstance(other, SoundGroup):
@@ -271,6 +276,12 @@ class SoundGroup(Playable):
         else:
             for p in self.playables:
                 p.__setattr__(key, value)
+
+    def __getattr__(self, key):
+        if key in self.__dict__:
+            return self.__dict__[key]
+        else:
+            return None
 
     def __add__(self, other):
         if other in self:
@@ -327,3 +338,7 @@ class SoundGroup(Playable):
     def time_till_end(self):
         times = list(map(lambda x: x.time_till_end, self))
         return max(times)
+
+    @property
+    def is_compound(self):
+        return True

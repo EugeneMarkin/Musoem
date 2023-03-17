@@ -40,6 +40,7 @@ class Menu:
         # that will open.
         # TODO: add a preferences file serialization to open the most
         # recent project
+        self.app = app
         self.command_map = None
         self.score_dir = None
         self.menubar = tk.Menu(app)
@@ -47,6 +48,7 @@ class Menu:
         filemenu.add_command(label = "Open", command = self.open_file, accelerator = "Ctrl+o")
         filemenu.add_command(label = "Reload Current Score", command = self.reload, accelerator = "Ctrl+r")
         filemenu.add_command(label = "Update Configs", command = self.update, accelerator = "Ctr+u")
+        self._load("/Users/eugenemarkin/Documents/Musoem_projects/survival kit")
         self.menubar.add_cascade(label="File", menu = filemenu)
         app.config(menu = self.menubar)
         app.winfo_toplevel().title("Musoem")
@@ -54,8 +56,11 @@ class Menu:
     # TODO: add hot keys to these both functions
     def open_file(self):
         print("open file")
-        self.dir_path = fd.askdirectory(initialdir = os.path.expanduser('~'))
-        self._load(self.dir_path)
+        path = fd.askdirectory(initialdir = os.path.expanduser('~'))
+        if path != '':
+            self._load(path)
+            project_name = os.path.basename(path)
+            app.winfo_toplevel().title(project_name)
 
     def reload(self):
         print("reload")
@@ -66,12 +71,13 @@ class Menu:
         print("update")
         if self.score_dir:
             new_map = self.score_dir.update_configs(app.command_parser.command_map)
-            app.command_parser.command_map = new_map
+            self.app.command_parser.command_map = new_map
 
     def _load(self, path):
+        self.dir_path = path
         self.score_dir = ScoreDir(path)
         command_map = self.score_dir.load()
-        app.command_parser = TextParser(command_map)
+        self.app.command_parser = TextParser(command_map)
 
 class Gui(tk.Tk):
     def __init__(self):
@@ -111,14 +117,14 @@ class Gui(tk.Tk):
 
     def key_press(self, event):
         if self.check_shortcuts(event):
-            return 'break'
+            return "break"
         if event.keysym == "Return" and (event.state & 0x0004): # mask for ctrl key
             self.execute()
             return 'break'
 
     def output_edit(self, event):
         if self.check_shortcuts(event):
-            return 'break'
+            return "break"
         if event.keysym in ["Down", "Up", "Left", "Right"]:
             return
         elif event.keysym != "BackSpace":

@@ -3,7 +3,7 @@ from lib.operations.operations import *
 from lib.playables.playable import Playable
 from lib.playables.section import Section
 from lib.playables.sample import Sample
-from FoxDot import Pattern, P, PGroup, PxRand
+from FoxDot import Pattern, P, PGroup, PxRand, Clock
 
 
 class Container:
@@ -24,7 +24,8 @@ class Config:
         self.path = path
 
     def evaluate(self, playables):
-        # first create local variables for score objects that may be used in the script
+
+        # create local variables for score objects that may be used in the script
         for p in playables:
             command = "%s = %s" % (p.keyword, "p")
             exec(command)

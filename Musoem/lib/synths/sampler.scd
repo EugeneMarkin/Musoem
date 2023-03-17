@@ -5,7 +5,7 @@ SynthDef.new(\sampler, {|bus = 0, buf = 0 ,dur = 5, enhance = 0, msmooth = 0.1, 
 
 	var in, chain, output, frames = 2**13, bw, fenv, volenv, envdur, timespan, freezetime;
 	    timespan = vattack + vdecay + dur + vrelease;
-     	in = PlayBuf.ar(numChannels: 2, bufnum: buf, rate: rate * SinOsc.ar(vibRate, 0, vibDepth, 1 - vibDepth)  , trigger: 1, startPos: 0, loop: 1);
+	    in = PlayBuf.ar(numChannels: 2, bufnum: buf, rate: rate * SinOsc.ar(vibRate, 0, vibDepth, 1 - vibDepth)  , trigger: 1, startPos: 0, loop: 1);
         // raise the buffer size (no of frames), notice the delay.
         chain = FFT(LocalBuf(frames), in, 0.5, 0);
 	    chain = PV_SpectralEnhance(chain, enhance, ratio:2, strength: 0.3);
