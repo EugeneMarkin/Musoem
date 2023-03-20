@@ -3,6 +3,7 @@ from lib.operations.operations import *
 from lib.playables.playable import Playable
 from lib.playables.section import Section
 from lib.playables.sample import Sample
+from lib.player.instrument import Instrument
 from FoxDot import Pattern, P, PGroup, PxRand, Clock
 
 
@@ -52,6 +53,7 @@ class Config:
                 continue
             obj = locals()[v]
             if isinstance(obj, Operation):
+                print("setting kw to", obj)
                 obj.keyword = v
                 operations.append(obj)
 

@@ -48,7 +48,7 @@ class Menu:
         filemenu.add_command(label = "Open", command = self.open_file, accelerator = "Ctrl+o")
         filemenu.add_command(label = "Reload Current Score", command = self.reload, accelerator = "Ctrl+r")
         filemenu.add_command(label = "Update Configs", command = self.update, accelerator = "Ctr+u")
-        self._load("/Users/eugenemarkin/Documents/Musoem_projects/survival kit")
+        self._load("/Users/eugenemarkin/Documents/Musoem/Musoem/music/examples/Down in the valley (bpm=75)")
         self.menubar.add_cascade(label="File", menu = filemenu)
         app.config(menu = self.menubar)
         app.winfo_toplevel().title("Musoem")
@@ -77,6 +77,11 @@ class Menu:
         self.dir_path = path
         self.score_dir = ScoreDir(path)
         command_map = self.score_dir.load()
+        print("resulting command map is ", command_map.playables, "ops", command_map.operations)
+        for p in list(command_map.playables.values()):
+            print("degree", p.degree)
+            print("octave", p.octave)
+            print("dur", p.dur)
         self.app.command_parser = TextParser(command_map)
 
 class Gui(tk.Tk):

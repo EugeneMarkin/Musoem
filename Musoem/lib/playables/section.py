@@ -23,6 +23,7 @@ class Section(SoundObject):
             self.params["bpm"].extend(mes.bpm)
             self.params["amp"].extend(mes.amp)
 
+        self.params["scale"] = Scale.chromatic
 
     def copy(self):
         cp = self.__class__([], instrument = self.instrument, keyword = self.keyword)

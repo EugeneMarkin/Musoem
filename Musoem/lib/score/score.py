@@ -104,10 +104,12 @@ class FileScore(Score):
             if not os.path.isdir(instrument_path):
                 continue
             instrument_dir = os.listdir(instrument_path)
-            if "midi" in instr: # TODO: change this
-                self._playables.update(self.load_midi_files(instrument_dir, Instrument(instr), instrument_path))
-            elif "sample" in instr:
+            if instr in Instrument.sampler_synths(): # TODO: change this
                 self._playables.update(self.load_audio_files(instrument_dir, Instrument(instr), instrument_path))
+            elif instr in Instrument.all_synths():
+                self._playables.update(self.load_midi_files(instrument_dir, Instrument(instr), instrument_path))
+            else:
+                print("WARNING: no instrument with name ", instr)
             any_bpm = get_bpm_from_path(instrument_path)
             for p in self._playables.values():
                 if p.bpm == None or p.bpm == Pattern([]) :

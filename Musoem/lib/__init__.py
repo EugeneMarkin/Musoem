@@ -1,8 +1,6 @@
 import os, shutil
 from FoxDot import SYNTHDEF_DIR as FOXDOT_SYNTHS_DIR
-
-MUSOEM_ROOT_DIR = os.path.realpath(__file__ + "/../..")
-MUSOEM_SYNTHS_DIR = MUSOEM_ROOT_DIR + "/lib/synths"
+from .base.constants import *
 
 def copy_synths():
     for file in os.listdir(MUSOEM_SYNTHS_DIR):

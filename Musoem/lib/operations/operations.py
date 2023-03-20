@@ -6,7 +6,7 @@ from ..playables.section import Section
 from ..playables.sample import Sample
 from ..playables.playable import SoundGroup
 from ..playables.control import Control
-from ..player.now_playing import NowPlaying
+from typing import NewType
 
 # A class for music transformation
 
@@ -16,7 +16,9 @@ class Operation(Entity):
         return self.__class__(self.keyword)
 
     def execute(self, sound_object):
+        print("execute")
         self.__dict__["sound"] = sound_object
+        print("sound is", sound_object)
         self.__dict__["initial_params"] = sound_object.params.copy()
         self.__dict__["changed_params"] = []
         self.perform()
@@ -29,7 +31,7 @@ class Operation(Entity):
             return
         for key in self.changed_params:
             self.sound.__setattr__(key, self.initial_params[key])
-        NowPlaying.update()
+        self.sound.remove_operation(self)
 
     def __setattr__(self, key, value):
         if self.sound is not None and key in self.sound.params:
@@ -45,6 +47,12 @@ class Operation(Entity):
             return self.__dict__["sound"][key]
         return None
 
+    def __getitem__(self, key):
+        return self.__getattr__(key)
+
+    def __setitem__(self, key, val):
+        self.__setattr__(key, val)
+
     def __invert__(self):
         self.undo()
 
@@ -56,6 +64,11 @@ class OperationGroup(Operation):
     def __init__(self, operations):
         self.keyword = super().__init__(reduce(lambda a,b: a.keyword + "," + b.keyword, operations))
         self.operations = operations
+
+    def copy(self):
+        cp = self.__class__(self, self.operations)
+        cp.__dict__ = self.__dict__.copy()
+        return cp
 
     def append(self, other):
         if isinstance(other, OperationGroup):
@@ -72,6 +85,56 @@ class OperationGroup(Operation):
         self.append(other)
         return self
 
+class Set(Operation):
+
+    def __init__(self, key, val):
+        self.op_key = key
+        self.op_val = val
+
+    def copy(self):
+        cp = self.__class__(self.op_key, self.op_val)
+        cp.keyword = self.keyword
+        return cp
+
+    def perform(self):
+        self[self.key] = self.val
+
+
+Effect = NewType("Effect", Set)
+
+
+class Every(Operation):
+
+    def __init__(self, number, op_key, method, *args, **kwargs):
+        print("super")
+        print("key ", op_key)
+        print("method ", method)
+        self.op_key = op_key
+        self.n = number
+        self.method = method
+        self.every_args = args
+        self.every_kwargs = kwargs
+
+    def copy(self):
+        cp = self.__class__(self.number, self.op_key, self.method, self.every_args, self.every_kwargs)
+        cp.keyword = self.keyword
+        return cp
+
+
+    def perform(self):
+        print("performing")
+        print("self.op_key is", self.op_key)
+        self[self.op_key].every(self.number, self.method, *self.every_args, **self.every_kwargs)
+
+class Apply(Every):
+
+    def __init__(self, op_key, method, *args, **kwargs):
+        return super().__init__(1, op_key, method, *args, **kwargs)
+
+    def copy(self):
+        cp = self.__class__(self.op_key, self.method, *self.every_args, **self.every_kwargs)
+        cp.keyword = self.keyword
+        return cp
 
 class ReversePitch(Operation):
 
@@ -82,6 +145,8 @@ class ReversePitch(Operation):
 class Retrograde(Operation):
 
     def perform(self):
+        self.degree = self.degree.reverse()
+        self.oct = self.oct.reverse()
         self.dur = self.dur.reverse()
 
 # Transposes the sound by a number of semitones

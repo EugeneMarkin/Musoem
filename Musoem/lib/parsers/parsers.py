@@ -10,9 +10,11 @@ from music21.tempo import MetronomeMark
 from music21.expressions import TextExpression
 from music21.meter.base import TimeSignature as M21TS
 from music21.converter import parse as parse_midi
+from music21.bar import Barline
 
 from ..score.text_mark import TextMark
 from ..score.time_signature import TimeSignature
+from ..base.constants import TRIM_MIDI_CLIPS
 
 
 # This class parses the music21 tree of a score
@@ -356,6 +358,9 @@ class MidiParser:
         self.sus.append(chord.quarterLength)
 
     def _parse_rest(self, rest):
+        print("next after rest is", rest.next())
+        if TRIM_MIDI_CLIPS and isinstance(rest.next(), Barline):
+            return
         self.pitch.append('rest')
         self.octave.append('rest')
         self.duration.append(rest.quarterLength)

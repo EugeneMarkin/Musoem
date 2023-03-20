@@ -1,5 +1,6 @@
-from FoxDot import SynthDef, FileSynthDef, MidiOut, Env
-from os import path
+from FoxDot import SynthDef, FileSynthDef, MidiOut, Env, SynthDefs
+import os
+from ..base.constants import MUSOEM_SYNTHS_DIR
 
 class Instrument:
 
@@ -15,11 +16,11 @@ class Instrument:
         else:
             self.synthdef = FileSynthDef(key)
             filename = self.synthdef.filename
-            if path.isfile(filename):
+            if os.path.isfile(filename):
                 self.synthdef.env = Env.mask()
             else:
                 print("WARNING: there is no instrument named ", key, "will fall back to piano")
-                self.synthdef = SynthDef("piano")
+                self.synthdef = SynthDef("keys")
 
     def __str__(self):
         return self.key
@@ -31,3 +32,15 @@ class Instrument:
             return False
         else:
             return self.synthdef.filename == other.synthdef.filename
+
+    @classmethod
+    def musoem_synths(self):
+        return list(map(lambda x: os.path.splitext(x)[0], os.listdir(MUSOEM_SYNTHS_DIR)))
+
+    @classmethod
+    def sampler_synths(self):
+        return ["sampler"]
+
+    @classmethod
+    def all_synths(self):
+        return Instrument.musoem_synths() + list(SynthDefs.keys())

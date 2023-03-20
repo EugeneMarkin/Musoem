@@ -80,8 +80,14 @@ class Playable(Entity):
         print("override me")
 
     def apply_operation(self, operation):
+        print("apply operation ", operation)
         self.operations[operation.keyword] = operation
         operation.execute(self)
+        NowPlaying.update()
+
+    def remove_operation(self, operation):
+        self.operations.pop(operation.keyword)
+        NowPlaying.update()
 
     @property
     def time_till_end(self):
