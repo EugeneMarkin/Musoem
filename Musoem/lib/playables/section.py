@@ -25,6 +25,9 @@ class Section(SoundObject):
 
         self.params["scale"] = Scale.chromatic
 
+        print("sound object: ", keyword)
+        print(self.description)
+
     def copy(self):
         cp = self.__class__([], instrument = self.instrument, keyword = self.keyword)
         cp.__dict__["measures"] = self._measures.copy()

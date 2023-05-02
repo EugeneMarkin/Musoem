@@ -6,5 +6,6 @@ def copy_synths():
     for file in os.listdir(MUSOEM_SYNTHS_DIR):
         src = MUSOEM_SYNTHS_DIR + "/" + file
         dst = FOXDOT_SYNTHS_DIR + "/" + file
+        print("copy synths to ", dst)
         shutil.copyfile(src, dst)
-copy_synths()
+#copy_synths()
