@@ -157,7 +157,9 @@ class Transpose(Operation):
         self.t = t
 
     def copy(self):
-        return self.__class__(self.t, self.keyword)
+        res = self.__class__(self.t)
+        res.keyword = self.keyword
+        return res
 
     def perform(self):
         self.degree = self.degree + self.t
@@ -203,15 +205,20 @@ class Multiply(Operation):
             self.pan = [pan]
 
     def copy(self):
-        return self.__class__(value, pan)
+        cp = self.__class__(self.value, self.pan)
+        cp.keyword = self.keyword
+        return cp
 
-    def execute(self):
-        if isinstance(self.sound, Sample):
-            if isinstance(self.bufnum, Pattern) and val <= len(self.bufnum):
-                self.bufnum = PGroup([self.bufnum[i] for i in range(0, self.value)] )
+    def execute(self, sound):
+        if isinstance(sound, Sample):
+            print("sound is ", sound)
+            print("bufnums ", sound.bufnums)
+            if isinstance(sound.bufnums, list) and self.value <= len(sound.bufnums):
+                sound.buf = PGroup([sound.bufnums[i] for i in range(0, self.value)] )
+                print("buf is now ", sound.buf)
             else:
-                self.bufnum = PGroup([self.bufnum]*self.value)
+                sound.buf = PGroup([sound.bufnums]*self.value)
         else:
             self.degree = PGroup([self.degree]*self.value)
 
-        self.pan = PGroup(pan)
+        sound.pan = PGroup(self.pan)

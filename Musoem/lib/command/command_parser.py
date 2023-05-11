@@ -60,12 +60,14 @@ class SequenceCommand(Command):
 
     def __init__(self, seq, map):
         self._map = map
+        print("seq ", seq)
         self.sequence = seq
 
     @property
     def result(self):
         res = []
         items = self.sequence.copy()
+        print("sequence ", items)
         while len(items) > 2:
             left = items[0]
             cur = items[1]
@@ -83,12 +85,19 @@ class SequenceCommand(Command):
         return res
 
     def _reduce_pair(self, a, b):
+        print("===============reduce pair called")
+        print("a is ", type(a), " ", a)
+        print("b is ", type(b), " ", b)
         if isinstance(a, Playable)  and isinstance(b, Playable):
-            return (a >> b)
+            a._next = b
+            b._parent = a
+            return b
         elif isinstance(a,Playable) and isinstance(b, Operation) :
+            print("=================================================playable and operation")
             a.apply_operation(b)
             return a
         elif isinstance(a, Operation) and isinstance(b, Playable):
+            print("=================================================playable and operation<-")
             b.apply_operation(a)
             return b
         elif isinstance(a, Operation) and isinstance(b, Operation):

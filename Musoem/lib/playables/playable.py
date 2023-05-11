@@ -3,6 +3,7 @@ from functools import reduce
 from ..player.section_player import SectionPlayer
 from ..player.now_playing import NowPlaying
 from ..base.entity import Entity
+from ..util.utils import R
 
 # A base class for Playable objects
 
@@ -120,11 +121,12 @@ class Playable(Entity):
 
     # set next schedulable after this one
     def __rshift__(self, other):
-        if other in self:
-            other = other.copy()
-        self._next = other
-        other._parent = self
-        return other
+        cp = self.copy()
+        other = other.copy()
+
+        cp._next = other
+        other._parent = cp
+        return cp
 
     # set the _times parameter of self
     def __mul__(self, times):
@@ -187,7 +189,10 @@ class SoundObject(Playable):
             raise Exception("Can't play the section because there is no instrument")
 
         degree = self.params["degree"]
+        if degree == None:
+            degree = [0, 0, 0, 0, 0, 0]
         kwargs = self.params.copy()
+        print("will play ", kwargs)
         kwargs.pop("degree")
         self.player >> self.instrument.synthdef(degree = degree, **kwargs)
 
@@ -204,14 +209,14 @@ class SoundObject(Playable):
 
     # add playables together
     def __add__(self, p):
-        return SoundGroup([self, p])
+        return SoundGroup([self.copy(), p.copy()])
 
 
     def __setattr__(self, attr, val):
         if attr in self.__dict__:
             self.__dict__[attr] = val
         else:
-            if not isinstance(val, Pattern):
+            if not isinstance(val, Pattern) and not isinstance(val, R):
                 if isinstance(val, list):
                     val = Pattern(val)
                 elif isinstance(val, int) or isinstance(val, float):
@@ -222,6 +227,7 @@ class SoundObject(Playable):
                 self.player.__setattr__(attr, val)
 
     def __getattr__(self, attr):
+        print("get attr called for attr ", attr)
         if attr in self.params:
             return self.params[attr]
         return None
@@ -254,13 +260,16 @@ class SoundGroup(Playable):
 
         # TODO: simplify this by adding a function that returns total clock beats
         all_times = list(map(lambda x: x._times, self))
+        print("my times ", all_times, "playables", self.playables)
         if None not in all_times:
             all_durs = list(map(lambda x: x._get_clock_beats(x.total_dur), self))
+            print("final dur is ", max(all_durs))
             Clock.future(max(all_durs), self.stop)
 
         return self
 
     def stop(self):
+        print("stop")
         if self._isplaying:
             for p in self: ~p
         super().stop()
@@ -285,8 +294,10 @@ class SoundGroup(Playable):
 
     def __getattr__(self, key):
         if key in self.__dict__:
+            print("key is in dict")
             return self.__dict__[key]
         else:
+            print("key is not in dict ", key)
             return None
 
     def __add__(self, other):
@@ -330,6 +341,7 @@ class SoundGroup(Playable):
     @property
     def total_dur(self):
         durs = list(map(lambda x: x.total_dur, self))
+        print("durs of my group ", durs)
         if None not in durs:
             return max(durs)
         else:

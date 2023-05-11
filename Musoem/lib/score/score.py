@@ -106,7 +106,7 @@ class FileScore(Score):
             instrument_dir = os.listdir(instrument_path)
             if instr in Instrument.sampler_synths(): # TODO: change this
                 self._playables.update(self.load_audio_files(instrument_dir, Instrument(instr), instrument_path))
-            elif instr in Instrument.all_synths():
+            elif instr in Instrument.all_synths() or "midi" in instr:
                 self._playables.update(self.load_midi_files(instrument_dir, Instrument(instr), instrument_path))
             else:
                 print("WARNING: no instrument with name ", instr)
@@ -116,6 +116,7 @@ class FileScore(Score):
                     p.bpm = Pattern([any_bpm])
 
     def load_midi_files(self, files, instrument, path):
+        print("load midi files")
         result = {}
         for file in files:
             kw = os.path.splitext(file)[0]
@@ -128,6 +129,7 @@ class FileScore(Score):
                 midi_set = SectionList(instrument, kw, list(midi_set))
                 for s in midi_set: s.keyword = kw
                 result[kw] = midi_set
+        print("files ", result)
         return result
 
     def midi_section(self, file, instrument, keyword):

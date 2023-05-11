@@ -1,8 +1,9 @@
-import random
-from FoxDot import FileSynthDef, Buffer, PxRand, Pattern, PGroup, Clock, Player
+import random, copy
+from FoxDot import FileSynthDef, Buffer, PxRand, PRand, Pattern, PGroup, Clock, Player
 
 from .playable import SoundObject
 from ..player.section_player import SectionPlayer
+from ..util.utils import R
 
 
 class Sample(SoundObject):
@@ -33,25 +34,30 @@ class SampleList(Sample):
 
     def __init__(self, instrument, keyword, bufnums):
         super().__init__(instrument, keyword, bufnums[0])
-
+        self.__dict__["bufnums"] = bufnums #TODO: rename this variable
         self.__dict__["bufs"] = bufnums
-        if len(bufnums) > 1:
-            self.buf = PxRand(bufnums[0], bufnums[-1])
-        else:
-            self.buf = bufnums[0]
         self.__dict__["ordered"] = False
         self.__dict__["buf_counter"] = -1
 
+# TODO: refactor this to look prettier
+    def initilize(self):
+        if len(self.bufs) > 1:
+            print("setting the random buffers")
+            self.buf = R(10, self.bufs[0], self.bufs[-1], 1)
+        else:
+            self.buf = self.bufs[0]
+
     def copy(self):
         res = self.__class__(self.instrument, self.keyword , self.bufs)
-        res.params = self.params
+        res.params = copy.deepcopy(self.params)
         res.ordered = self.ordered
         self.buf_counter += 1
         res.buf_counter = self.buf_counter
+        res.initilize()
         return res
 
     def play(self):
         if self.ordered:
-            self.buf = Pattern(self.bufs)[self.buf_counter]
+            self.buf = self.bufnums[self.buf_counter]
 
         super().play()

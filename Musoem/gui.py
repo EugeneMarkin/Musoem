@@ -48,7 +48,7 @@ class Menu:
         filemenu.add_command(label = "Open", command = self.open_file, accelerator = "Ctrl+o")
         filemenu.add_command(label = "Reload Current Score", command = self.reload, accelerator = "Ctrl+r")
         filemenu.add_command(label = "Update Configs", command = self.update, accelerator = "Ctr+u")
-        self._load("/Users/eugenemarkin/Documents/Musoem/Musoem/music/examples/Down in the valley (bpm=75)")
+        self._load("/Users/eugenemarkin/Documents/Musoem_projects/survival kit")
         self.menubar.add_cascade(label="File", menu = filemenu)
         app.config(menu = self.menubar)
         app.winfo_toplevel().title("Musoem")
@@ -98,7 +98,7 @@ class Gui(tk.Tk):
         self.input.bind("<Key>", self.key_press)
         self.output.bind("<Key>", self.output_edit)
 
-        self.input.pack(side = tk.TOP, fill = "both",  expand = True, ipady = 0)
+        self.input.pack(side = tk.TOP, fill = "both",  expand = False, ipady = 0)
         self.output.pack(side = tk.BOTTOM, fill = "both", expand = True, ipady = 0)
         font = ("Helvetica", 20, "normal")
         self.input.configure(font = ("Helvetica", 28, "normal"), background = "black", foreground = "white", bd=1, selectborderwidth = 0, insertbackground = "white")

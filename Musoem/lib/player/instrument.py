@@ -6,6 +6,7 @@ class Instrument:
 
     def __init__(self, key):
         self.key = key
+        print("instrument ", key)
         if "midi" in key:
             split_key = key.split(" ")
             if (len(split_key) != 2):

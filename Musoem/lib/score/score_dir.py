@@ -57,6 +57,15 @@ class ScoreDir:
         cm = CommandMap(playables, operations)
         return cm
 
+
+    #def _remove_repetitions(self, playables):
+    #    dict = {}
+    #    for p in playables:
+    #        if p.keyword in dict.keys():
+    #            dict[p.keyword] =
+    #        keys += p.keyword
+
+
     def _execute_configs(self, configs, playables):
         # replace the objects here with the ones that are already playing
         # so that changes in config will take instant effect

@@ -184,6 +184,7 @@ class VoiceParser:
         self.pitch.append(degree)
         self.octave.append(oct)
         self.duration.append(dur)
+        self.amp.append(note.volume.realized)
         self.sus.append(sus)
 
 
@@ -215,6 +216,9 @@ class VoiceParser:
         else:
             self.pitch.append('rest')
             self.octave.append('rest')
+
+        v_map = map(lambda n: n.volume.realized, chord.notes)
+        self.amp.append(tuple(v_map))
         self.duration.append(dur)
         self.sus.append(sus)
 
@@ -224,6 +228,7 @@ class VoiceParser:
         self.octave.append('rest')
         self.duration.append(rest.quarterLength)
         self.sus.append(rest.quarterLength)
+        self.amp.append(0)
 
     def _parse_unpitched(self, unpitched):
         self.pitch.append(self._get_scale_degree(unpitched.displayStep))
@@ -341,7 +346,7 @@ class MidiParser:
         self.pitch.append(self._get_scale_degree(note.pitch))
         self.octave.append(note.octave+1)
         self.sus.append(note.quarterLength)
-        self.amp.append(note.volume.velocityScalar)
+        self.amp.append(note.volume.realized)
         if next is None:
             self.duration.append(note.quarterLength)
         else:
@@ -350,7 +355,7 @@ class MidiParser:
     def _parse_chord(self, chord):
         p_map = map(lambda n: self._get_scale_degree(n.pitch), chord.notes)
         o_map = map(lambda n: n.octave+1, chord.notes)
-        v_map = map(lambda n: n.volume.velocityScalar, chord.notes)
+        v_map = map(lambda n: n.volume.realized, chord.notes)
         self.pitch.append(tuple(p_map))
         self.octave.append(tuple(o_map))
         self.amp.append(tuple(v_map))
@@ -358,7 +363,6 @@ class MidiParser:
         self.sus.append(chord.quarterLength)
 
     def _parse_rest(self, rest):
-        print("next after rest is", rest.next())
         if TRIM_MIDI_CLIPS and isinstance(rest.next(), Barline):
             return
         self.pitch.append('rest')
