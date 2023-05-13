@@ -60,14 +60,12 @@ class SequenceCommand(Command):
 
     def __init__(self, seq, map):
         self._map = map
-        print("seq ", seq)
         self.sequence = seq
 
     @property
     def result(self):
         res = []
         items = self.sequence.copy()
-        print("sequence ", items)
         while len(items) > 2:
             left = items[0]
             cur = items[1]
