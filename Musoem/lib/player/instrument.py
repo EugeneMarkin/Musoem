@@ -40,7 +40,7 @@ class Instrument:
 
     @classmethod
     def sampler_synths(self):
-        return ["sampler"]
+        return ["sampler", "warper", "plain"]
 
     @classmethod
     def all_synths(self):

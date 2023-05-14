@@ -129,7 +129,6 @@ class FileScore(Score):
                 midi_set = SectionList(instrument, kw, list(midi_set))
                 for s in midi_set: s.keyword = kw
                 result[kw] = midi_set
-        print("files ", result)
         return result
 
     def midi_section(self, file, instrument, keyword):
@@ -144,6 +143,7 @@ class FileScore(Score):
             kw = os.path.splitext(file)[0]
             if ".wav" in file or ".aif" in file or ".aiff" in file:
                 bufnum = self.buf_num_generator.next
+                #print(kw," bufnum ", bufnum)
                 Server.bufferRead(path + "/" + file, bufnum)
                 sample = Sample(instrument, kw, bufnum)
                 result[kw] = sample

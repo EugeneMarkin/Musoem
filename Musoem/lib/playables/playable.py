@@ -192,7 +192,7 @@ class SoundObject(Playable):
         if degree == None:
             degree = [0, 0, 0, 0, 0, 0]
         kwargs = self.params.copy()
-        print("will play ", kwargs)
+        print(self.keyword, " will play ", kwargs, " instrument", self.instrument)
         kwargs.pop("degree")
         self.player >> self.instrument.synthdef(degree = degree, **kwargs)
 
@@ -227,7 +227,6 @@ class SoundObject(Playable):
                 self.player.__setattr__(attr, val)
 
     def __getattr__(self, attr):
-        print("get attr called for attr ", attr)
         if attr in self.params:
             return self.params[attr]
         return None
@@ -260,10 +259,8 @@ class SoundGroup(Playable):
 
         # TODO: simplify this by adding a function that returns total clock beats
         all_times = list(map(lambda x: x._times, self))
-        print("my times ", all_times, "playables", self.playables)
         if None not in all_times:
             all_durs = list(map(lambda x: x._get_clock_beats(x.total_dur), self))
-            print("final dur is ", max(all_durs))
             Clock.future(max(all_durs), self.stop)
 
         return self

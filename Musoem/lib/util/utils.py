@@ -29,11 +29,9 @@ class R(list):
 
 
     def __copy__(self):
-        print("calling the overriden copy")
         return self.__class__.__init__(self.size, self.s, self.e, self.div)
 
     def __deepcopy__(self, memo):
-        print("calling the overriden deep copy")
         return R(self.size, self.s, self.e, self.div)
 
     @classmethod

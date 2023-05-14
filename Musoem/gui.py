@@ -78,9 +78,6 @@ class Menu:
         self.score_dir = ScoreDir(path)
         command_map = self.score_dir.load()
         print("resulting command map is ", command_map.playables, "ops", command_map.operations)
-        for p in list(command_map.playables.values()):
-            print("sound object: ", p.keyword)
-            print(p.description)
         self.app.command_parser = TextParser(command_map)
 
 class Gui(tk.Tk):
