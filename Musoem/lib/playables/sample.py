@@ -52,6 +52,8 @@ class SampleList(Sample):
         res.params = copy.deepcopy(self.params)
         res.ordered = self.ordered
         self.buf_counter += 1
+        if self.buf_counter >= len(self.bufnums):
+            self.buf_counter = 0
         res.buf_counter = self.buf_counter
         res.initilize()
         return res
