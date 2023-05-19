@@ -73,12 +73,36 @@ class Menu:
             new_map = self.score_dir.update_configs(app.command_parser.command_map)
             self.app.command_parser.command_map = new_map
 
+    def font_bigger(self):
+        self.app.fm.plus()
+        self.app.set_size()
+
+    def font_smaller(self):
+        self.app.fm.minus()
+        self.app.set_size()
+
     def _load(self, path):
         self.dir_path = path
         self.score_dir = ScoreDir(path)
         command_map = self.score_dir.load()
         print("resulting command map is ", command_map.playables, "ops", command_map.operations)
         self.app.command_parser = TextParser(command_map)
+
+class FontManager:
+
+    def __init__(self):
+        self.family = "Helvetica"
+        self.insize = 28
+        self.outsize = 20
+        self.style = "normal"
+
+    def plus(self):
+        self.insize += 2
+        self.outsize += 2
+
+    def minus(self):
+        self.insize -= 2
+        self.outsize -= 2
 
 class Gui(tk.Tk):
     def __init__(self):
@@ -91,18 +115,31 @@ class Gui(tk.Tk):
         self.frame.pack(fill = "both", expand = True, ipadx=0, ipady=0)
         self.input = tk.Text(self.frame, width = 50, height = 1)
         self.output = tk.Text(self.frame, width = 50, height = 20)
+        self.fm = FontManager()
 
         self.input.bind("<Key>", self.key_press)
         self.output.bind("<Key>", self.output_edit)
 
         self.input.pack(side = tk.TOP, fill = "both",  expand = False, ipady = 0)
         self.output.pack(side = tk.BOTTOM, fill = "both", expand = True, ipady = 0)
-        font = ("Helvetica", 20, "normal")
-        self.input.configure(font = ("Helvetica", 28, "normal"), background = "black", foreground = "white", bd=1, selectborderwidth = 0, insertbackground = "white")
-        self.output.configure(font = ("Helvetica", 20, "normal"),  background = "black", foreground = "white", bd=1, selectborderwidth = 0, insertbackground = "white")
 
+        self.set_size()
         self.menu = Menu(self)
 
+
+    def set_size(self):
+        self.input.configure(font = (self.fm.family, self.fm.insize, self.fm.style),
+                                    background = "black",
+                                    foreground = "white",
+                                    bd=1,
+                                    selectborderwidth = 0,
+                                    insertbackground = "white")
+        self.output.configure(font = (self.fm.family, self.fm.outsize, self.fm.style),
+                                    background = "black",
+                                    foreground = "white",
+                                    bd=1,
+                                    selectborderwidth = 0,
+                                    insertbackground = "white")
 
     def check_shortcuts(self, event):
         if event.keysym == "o" and (event.state & 0x0004):
@@ -113,6 +150,12 @@ class Gui(tk.Tk):
             return "break"
         elif event.keysym == "u" and (event.state & 0x0004):
             self.menu.update()
+            return "break"
+        elif event.keysym == "equal" and (event.state & 0x0004):
+            self.menu.font_bigger()
+            return "break"
+        elif event.keysym == "minus" and (event.state & 0x0004):
+            self.menu.font_smaller()
             return "break"
         return None
 
