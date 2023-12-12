@@ -66,6 +66,8 @@ class SequenceCommand(Command):
     def result(self):
         res = []
         items = self.sequence.copy()
+        if items == [] or items == None:
+            return None
         while len(items) > 2:
             left = items[0]
             cur = items[1]

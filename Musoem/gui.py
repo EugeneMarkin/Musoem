@@ -114,6 +114,7 @@ class Gui(tk.Tk):
         self.frame.configure(padx=0, pady=0, relief = "flat", bd=1)
         self.frame.pack(fill = "both", expand = True, ipadx=0, ipady=0)
         self.input = tk.Text(self.frame, width = 50, height = 1)
+        self.input.focus_set()
         self.output = tk.Text(self.frame, width = 50, height = 20)
         self.fm = FontManager()
 
@@ -141,6 +142,14 @@ class Gui(tk.Tk):
                                     selectborderwidth = 0,
                                     insertbackground = "white")
 
+    def switch_focus(self):
+        if self.focus_get() == self.input:
+            print("hello")
+            self.output.focus_set()
+        else:
+            print("world")
+            self.input.focus_set()
+
     def check_shortcuts(self, event):
         if event.keysym == "o" and (event.state & 0x0004):
             self.menu.open_file()
@@ -157,12 +166,16 @@ class Gui(tk.Tk):
         elif event.keysym == "minus" and (event.state & 0x0004):
             self.menu.font_smaller()
             return "break"
+        elif event.keysym == "Tab":
+             print("key sym", event.keysym)
+             self.switch_focus()
+             return "break"
         return None
 
     def key_press(self, event):
         if self.check_shortcuts(event):
             return "break"
-        if event.keysym == "Return" and (event.state & 0x0004): # mask for ctrl key
+        if event.keysym == "Return":
             self.execute()
             return 'break'
 
@@ -177,12 +190,16 @@ class Gui(tk.Tk):
         cursor = self.output.index(tk.INSERT)
         x = int(cursor.split(".")[0])
         y = int(cursor.split(".")[1])
+        try :
+            res = list(filter(lambda t: t.has_cursor(x,y), self.playing))
+            if len(res) == 1:
+                tag = res[0]
+                ~tag.playable
+                print(tag)
+                return 'break'
+        except Exception as e:
+            print("oops ", e)
 
-        tag = list(filter(lambda t: t.has_cursor(x,y), self.playing))[0]
-        ~tag.playable
-        print(tag)
-
-        return 'break'
 
     def execute(self):
         cursor = self.input.index(tk.INSERT)
